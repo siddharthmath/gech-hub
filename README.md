@@ -1,34 +1,72 @@
+# CampusOS FindIt UI
+
+**Next.js 15+ frontend** for the live CampusOS FindIt (Lost & Found) backend at
+`https://campus-os-backend-8sjf.onrender.com`.
+
+---
+
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Run the app
 pnpm dev
-# or
-bun dev
+
+# Check types
+pnpm types
+
+# Lint
+pnpm lint
+
+# Test
+pnpm test
+
+# Build for production
+pnpm build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+### FindIt (mobile-first Lost & Found)
+  - Browse found items gallery (paged grid)
+  - Item detail with images
+  - Claim items (students)
+  - Staff workflows: post, edit, archive, resolve claims
 
-To learn more about Next.js, take a look at the following resources:
+### Lost Requests
+  - Report lost items
+  - My claims list
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Admin Panel
+  - User management (separate session)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Auth
+  - Email + OTP login
+  - 12-hour tokens with auto logout
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+src/
+├─ app/              # Routes and layout
+├─ components/       # Presentational UI
+├─ lib/api/          # API client (base URL, auth, errors)
+├─ viewmodels/       # State & queries
+├─ store/            # Session stores
+└─ features/         # Admin screens
+```
+All data comes from the live backend only. No mocks.
+
+---
+
+## License
+
+- MIT
