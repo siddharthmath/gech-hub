@@ -1,7 +1,4 @@
-# CampusOS FindIt UI
-
-**Next.js 15+ frontend** for the live CampusOS FindIt (Lost & Found) backend at
-`https://campus-os-backend-8sjf.onrender.com`.
+# GECHhub
 
 ---
 
@@ -64,6 +61,27 @@ src/
 └─ features/         # Admin screens
 ```
 All data comes from the live backend only. No mocks.
+
+---
+
+## Backend readiness foundation
+
+The existing UI remains intact. The server foundation adds Prisma ORM 7,
+PostgreSQL migrations, `GET /api/health`, shared API error handling, JWT and
+OTP helpers, IDs, pagination helpers, and Vitest coverage for the contract.
+
+Keep your existing `DATABASE_URL` in `.env` and add `JWT_SECRET`. Set
+`DATABASE_URL_TEST` to a different, dedicated PostgreSQL test database before
+running `pnpm test`; test setup resets that database at the beginning of each
+run and clears test data between files.
+
+```bash
+pnpm install
+pnpm prisma migrate dev --name init
+pnpm prisma generate
+pnpm types && pnpm lint && pnpm test && pnpm build
+pnpm start
+```
 
 ---
 

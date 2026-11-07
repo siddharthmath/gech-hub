@@ -7,8 +7,8 @@ Prove the shipped build against the live backend.
 - `pnpm build` clean; start the production server (`pnpm start`) and re-run
   the Phase 02–06 acceptance checks against it — dev-only behaviour must not
   be carrying anything.
-- Env hygiene: base URL comes from `NEXT_PUBLIC_API_URL`, defaulting to
-  https://campus-os-backend-8sjf.onrender.com. No secrets in the client bundle
+- Env hygiene: base URL comes from `NEXT_PUBLIC_API_URL`, defaulting to the
+  configured live backend. No secrets in the client bundle
   (there are none to have — OTP login only).
 - Token handling: nothing sensitive in URLs; token in storage only.
 - Checklist file `docs/release-checklist.md` filled with live results.

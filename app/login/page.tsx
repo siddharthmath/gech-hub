@@ -44,7 +44,7 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md gap-0 rounded-2xl p-7 shadow-sm sm:p-9">
         <Link href="/" className="text-sm font-semibold tracking-tight text-primary">
-          CampusOS <span className="text-muted-foreground">/ FindIt</span>
+          GECHhub <span className="text-muted-foreground">/ FindIt</span>
         </Link>
         <h1 className="mt-8 text-3xl font-semibold tracking-tight">
           Welcome back

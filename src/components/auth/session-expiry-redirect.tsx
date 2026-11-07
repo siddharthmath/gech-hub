@@ -15,8 +15,8 @@ export function SessionExpiryRedirect() {
       if (scope === "admin") queryClient.removeQueries({ queryKey: ["admin"] });
       router.replace(scope === "admin" ? "/admin-login" : "/login");
     }
-    window.addEventListener("campus-os:session-expired", onSessionExpired);
-    return () => window.removeEventListener("campus-os:session-expired", onSessionExpired);
+    window.addEventListener("gechhub:session-expired", onSessionExpired);
+    return () => window.removeEventListener("gechhub:session-expired", onSessionExpired);
   }, [queryClient, router]);
   return null;
 }

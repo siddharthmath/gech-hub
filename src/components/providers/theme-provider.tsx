@@ -4,8 +4,8 @@ import { createContext, useContext, useEffect, useSyncExternalStore, type ReactN
 import { Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
-const THEME_STORAGE_KEY = "campus-os-theme";
-const THEME_CHANGE_EVENT = "campus-os-theme-change";
+const THEME_STORAGE_KEY = "gechhub-theme";
+const THEME_CHANGE_EVENT = "gechhub-theme-change";
 const ThemeContext = createContext<{ isDark: boolean; setIsDark: (value: boolean) => void } | null>(null);
 
 function subscribeToTheme(onStoreChange: () => void) {

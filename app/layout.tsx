@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CampusOS — FindIt",
+  title: "GECHhub — FindIt",
   description:
     "A clear, thoughtful campus lost and found for browsing found items, making claims, and reporting lost belongings.",
 };

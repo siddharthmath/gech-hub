@@ -6,7 +6,7 @@ MVVM, enforced by where code lives. Layers only ever import downward.
 app/ (routes, layout, guards)
   └─ viewmodels/ (hooks: TanStack Query + Zustand)
        └─ lib/api/ (typed client + endpoint functions + types)
-            └─ CampusOS API (live, read-only truth)
+            └─ GECHhub API (live, read-only truth)
 components/ (presentational, imports nothing below)
 ```
 
@@ -14,14 +14,8 @@ components/ (presentational, imports nothing below)
 
 ```
 src/
-  features/admin/
-    admin-shell.tsx             # admin header and profile query
-    admin-users-screen.tsx      # responsive user management surface
   app/
     login/page.tsx
-    admin-login/page.tsx
-    admin/layout.tsx             # separate admin guard + shell
-    admin/users/page.tsx
     (app)/layout.tsx            # auth guard + shell (nav)
     (app)/findit/page.tsx       # gallery
     (app)/findit/[postId]/page.tsx
@@ -46,27 +40,13 @@ src/
     useClaims.ts                # GET/POST/DELETE claims
     useResolution.ts            # POST/PATCH/DELETE resolution
     useLostRequests.ts          # CRUD lost requests
-    useAdminUsers.ts            # admin account queries and mutations
-  store/session.ts              # FindIt session only
-  store/admin-session.ts        # admin session only
+  stores/session.ts
 ```
 
 ## Data types (from the cookbook — do not extend)
 
 ```ts
 type Role = 'admin' | 'student' | 'faculty' | 'office_staff';
-
-interface AdminProfile {
-  role: 'admin'; team_id: string; institution_name: string; name: string;
-  email_id: string; phone_number?: string;
-}
-
-interface AdminUser {
-  role: 'student' | 'faculty' | 'office_staff'; team_id: string; name: string;
-  email_id: string; phone_number?: string; dept?: string; designation?: string;
-  usn?: string; created_at?: string; updated_at?: string; otp?: string;
-  created_by?: string;
-}
 
 interface Profile {
   role: Role; team_id: string; name: string; email_id: string;
@@ -133,14 +113,6 @@ interface ApiError { code: string; message: string; details?: unknown; request_i
 | createLost | POST /api/v1/findit/lost-requests | JSON `{title*, description?, location_lost?, lost_on?}` |
 | updateLost | PATCH /api/v1/findit/lost-requests/{id} | owner; `status: archived/active` |
 | deleteLost | DELETE /api/v1/findit/lost-requests/{id} | owner |
-| adminLogin | POST /api/v1/auth/admin/login | Admin OTP login; stored separately from FindIt |
-| adminMe | GET /api/v1/admin/me | Admin profile refresh |
-| listUsers | GET /api/v1/admin/users?role=&limit=&cursor= | Admin only; includes OTPs |
-| createUser | POST /api/v1/admin/users | Admin only; role-specific JSON; response includes OTP |
-| getUser | GET /api/v1/admin/users/{email_id} | Admin only; user profile with OTP |
-| updateUser | PATCH /api/v1/admin/users/{email_id} | Admin only; editable profile fields; role cannot change |
-| deleteUser | DELETE /api/v1/admin/users/{email_id} | Admin only; response message |
-| regenerateOtp | POST /api/v1/admin/users/{email_id}/regenerate-otp | Admin only; response carries new OTP |
 
 ## Error contract
 
@@ -153,8 +125,7 @@ Retry-After.
 
 ## State rules
 
-- FindIt session: Zustand + persist under `campus-os-session`. Token + profile + expiry.
-- Admin session: separate Zustand persist key `campus-os-admin-session`. Token + admin profile + expiry. Never share tokens or logout actions between stores.
+- Session: Zustand + persist (localStorage). Token + profile + expiry.
 - Server data: TanStack Query. Query keys: `['posts', filters]`,
   `['post', id]`, `['claims', postId]`, `['myClaims']`, `['lost', filters]`.
   Mutations invalidate affected keys — never manual refetch.

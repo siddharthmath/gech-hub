@@ -1,135 +1,145 @@
-# CampusOS FindIt UI
+# GECHhub
 
-The product decisions behind this build, written before it starts, with the
-reasoning attached. Read the part you need before you build something.
+The product decisions behind this build, with the reasoning attached. Read the
+part you need before you build something.
 
 ## What it is
 
-A premium, mobile-first web UI for Track 01 of CampusOS — FindIt: Lost & Found —
-talking to an already-live backend at
-https://campus-os-backend-8sjf.onrender.com.
+GECHhub is a campus platform. Track 01, **FindIt: Lost & Found**, is the first
+track. This repository is one Next.js project that holds the premium,
+mobile-first web UI **and** the API behind it (`/api/v1`, Prisma + PostgreSQL).
 
-Office staff post found items with photos. Students and faculty browse the
-gallery, open an item, and claim it with a proof message. Staff review all
-claims on a post and resolve it by approving exactly one — the post archives
-itself, the chosen claim is approved, the rest are rejected. Separately, anyone
-can report a lost item; staff see everyone's lost reports, everyone else sees
-their own.
+Office staff post found items with photos. Students and faculty browse, open an
+item and claim it with a proof message. Staff review all claims on a post and
+resolve it by approving exactly one: the post archives itself, the chosen claim
+is approved, the rest are rejected. Anyone non-admin can report a lost item;
+staff see everyone's reports, everyone else sees their own.
+
+There is no self-registration. The organisers issue one admin email + OTP; the
+admin creates every other account, and the response carries that user's OTP.
 
 ## The bet
 
-The backend and its data model are fixed. The entire product value of this
-project is the UI: it must make a first-time user successful in under a minute
-— find the gallery, recognise their item, claim it — and make staff fast —
-post in seconds, review claims in one glance, resolve in one click. Every
-decision below is measured against those two sentences.
+The API contract is fixed (the API Quick Guide). The value is in two things:
+the UI lets a first-time user find, recognise and claim their item in under a
+minute and lets staff post, review and resolve in a few clicks; and the backend
+is small, exact to the contract and easy to extend with the next tracks.
 
 ## Who's who
 
-Roles come from `profile.role` after login; office staff also carry `dept`.
-
-| Role | In FindIt they can |
+| Role | Can |
 |---|---|
-| office_staff | post/edit/archive/delete found posts, see ALL claims, resolve posts, see everyone's lost requests |
-| student / faculty | browse, claim, withdraw own pending claim, see own lost requests, report lost items |
-| admin | use the separate Phase 08 user-management panel; the admin session is not used by FindIt |
+| admin | sign in at `/admin-login`; create, view, edit, delete users; regenerate OTPs. Not part of FindIt itself. |
+| office_staff | post/edit/archive/delete found posts, see all claims, resolve posts, see everyone's lost requests |
+| student / faculty | browse, claim, withdraw own pending claim, report lost items, see own lost requests |
 
-The API enforces all of this; the UI mirrors it by hiding actions the role
-can't use. Hidden, not disabled — a disabled button for a forbidden action is
-clutter.
+`office_staff` also carry `dept`. Student Affairs and Campus Maintenance have
+special powers in later tracks (DocDesk, FixIt); not built now.
+
+The API enforces roles; the UI mirrors it by hiding actions a role cannot use.
 
 ## Scope
 
-- Login (email + OTP) with token persistence and automatic redirect on 401.
-- Found items gallery: paged grid, search, status filter, skeleton loading,
-  empty state.
-- Item detail: image gallery, all post fields, claim form, claims list
-  (role-scoped), resolved/archived states.
-- Staff workflows: post found item (up to 5 images), edit, archive/reopen,
-  delete, claims review, resolve with optional note, undo resolution.
-- My claims: list of own claims across posts with decision status.
-- Lost requests: report, list (role-scoped), edit, mark as found (archived),
-  reactivate, delete.
-- Error handling driven by `error.code` with one shared handler.
-- Phase 08 admin user management on its own `/admin-login` and `/admin/*` surface, with separate session storage and the documented admin account endpoints.
+**Backend (specs 10–23, one goal and 2 endpoints each, with tests)**
+- Admin sign-in and account management (create, list, view, edit, delete, OTP reissue).
+- User sign-in and profile.
+- FindIt: found posts with images, claims, resolution (resolve, change, undo),
+  lost requests.
+
+**Frontend (phases 01–09)**: login, gallery, item detail, claims, staff
+workflows, lost requests, admin user management, responsive audit. After the
+backend specs, the frontend client points at the same origin.
 
 ## Out of scope, and why
 
-- **Other tracks (Notice Hub, DocDesk, FixIt).** This build includes Track 01
-  plus the separate Phase 08 onboarding panel; the other tracks remain out of scope.
-- **Using an admin session in FindIt.** The admin panel and FindIt have separate
-  storage keys and guards. Admins do not enter FindIt with their admin token.
-- **Mocking or a local backend.** The API is live and shared. Tests use MSW to
-  intercept at the fetch layer, never a fake data module the UI imports.
-- **Notifications, chat, real-time.** The API has no such endpoints.
-- **Claim resolution by non-staff.** Only staff resolve. The UI must not imply
-  otherwise.
-- **Storing file URLs.** They expire in ~15 minutes; only `<img>` previews use
-  them, transiently.
+- **Other tracks (Notice Hub, DocDesk, FixIt).** The backend is built to accept
+  them later as new modules; nothing for them is built now.
+- **Endpoints outside the Quick Guide.** No registration, password reset, bulk
+  import, notifications, chat or real-time.
+- **Using an admin session in FindIt.** Separate sessions, separate guards.
+- **Mock data in the app.** Data comes from PostgreSQL through the API. Frontend
+  tests intercept at the fetch layer (MSW), never a fake data module.
+- **Claim resolution by non-staff.**
+- **Storing file URLs.** They expire in ~15 minutes.
 
 ## How it works
 
-**The API client is the only network boundary.** `src/lib/api/client.ts`
-owns the base URL, the auth header, JSON/form-data selection, and error
-normalisation (`{error:{code,message,details}}` → typed `ApiError`). Every
-request in the app passes through it. If it can't be done through the client,
-it isn't done.
+**One contract, one envelope.** Every success is JSON; every failure is
+`{ error: { code, message, details }, request_id }`. Clients branch on `code`.
+Lists use cursor pagination (`next_cursor`, `null` at the end).
 
-**ViewModels own state; components own nothing.** Each screen has a hook in
-`src/viewmodels/` that wraps TanStack Query for server state and Zustand for
-session/auth. Components receive props and emit events. This keeps screens
-testable without rendering and swapping implementations cheap.
+**Backend layers.** Route → service → repository. Routes are thin and wrapped
+in `withApi`; services hold rules and transactions; only repositories touch
+Prisma. This keeps rules testable without HTTP and lets storage, rate-limiting
+and policy change in one place.
 
-**Server state is never copied into local state.** Lists come from the query
-cache; mutations invalidate the affected keys. No manual "refresh" buttons.
+**Backend is evolutionary.** A new feature is a new module folder, a new route
+folder and a new additive migration. The shared kernel (`src/server/core`) only
+grows. Responses only gain optional fields. This is how Notice Hub, DocDesk and
+FixIt can be added without reworking FindIt.
 
-**Pagination is cursor-based, invisible until needed.** Lists page with
-`?cursor=` (`next_cursor: null` = end). The UI loads the first page and shows
-a "Load more" button while `next_cursor` exists — no page numbers, the API
-doesn't have them.
+**Auth is JWT plus a database check.** Tokens are HS256, 12h, payload
+`{ sub, role, teamId, dept? }`. The guard re-reads the user, so deleting a user
+ends their session immediately. Login attempts are rate-limited through the
+database so it works on serverless hosting.
 
-**Auth is a guard, not a wall.** The route group `(app)` checks the token
-store and redirects to `/login`. The API is the real enforcement; the guard
-just avoids flashing protected screens.
+**OTPs are stored readable** because the admin API must list and return them.
+They are therefore only exposed on admin endpoints, never logged, never in URLs.
 
-## The interface
+**Frontend.** The API client is the only network boundary; view models own
+state; components are presentational; server data is never copied to local
+state.
 
-A clean campus product, not a dashboard. Generous whitespace, one accent
-color (indigo), zinc neutrals, Inter. Status is always color + label, never
-color alone (accessibility). Mobile-first: single column, bottom sheet modals;
-on desktop the same screens grow into grids and a right-side detail panel.
+## Data decisions
 
-**Nothing moves on its own.** Loading is skeletons that match the layout;
-success is a toast; errors are toasts with the API's message. No ambient
-animation.
-
-**Premium means fast and legible, not decorated.** Shadows subtle, radius
-consistent (rounded-lg), one primary action per screen.
+- IDs are generated by the server with a type prefix (`FND-`, `CLM-`, `LST-`);
+  a wrong-kind id is a 422.
+- A **resolved** post is also `archived`. The only way back is undoing the
+  resolution, which returns the post to `active` and every claim to `pending`.
+- One claim per user per post; withdrawing deletes it, so they may claim again.
+- Claims and lost requests are deleted with their owner; a staff member who
+  still has found posts cannot be deleted (`USER_HAS_RECORDS`).
+- Images: up to 5 per post, 5MB each, JPEG/PNG/WebP, checked by content type and
+  magic bytes. A PATCH with `images` replaces all of them.
+- Owner-scoped records answer **404** to anyone else.
 
 ## Where this is likely to go wrong
 
-**Role-scoped rendering.** The claims list looks identical for staff and
-students but shows different data. The acceptance check must log in as both.
+**Role-scoped data.** The claims and lost-request lists look the same for every
+role but return different rows. Tests and the acceptance check must run as
+student and staff.
 
-**Image handling.** Up to 5 images, 5MB each, JPEG/PNG/WebP; client validates
-before upload and shows per-image errors from `error.code` (TOO_MANY_IMAGES,
-IMAGE_TOO_LARGE, UNSUPPORTED_IMAGE_TYPE).
+**Resolve / undo atomicity.** Several rows change together. They run in one
+transaction, and tests force a failure to prove nothing is half-applied.
 
-**Resolved vs archived.** A resolved post can't be reopened by PATCH (409
-POST_RESOLVED) — the only path back is undoing the resolution. The UI must
-route staff to the right action, not expose the wrong one.
+**Image handling.** Validate everything before storing anything; remove old
+files only after the database commit; never fail a request because cleanup
+failed.
 
-**Token expiry mid-session.** 12 hours is long enough to forget. Every query
-must handle 401 TOKEN_EXPIRED by clearing the session and redirecting to login.
+**Resolved vs archived.** PATCH cannot reopen a resolved post (409
+`POST_RESOLVED`); the UI must offer "Undo resolution" instead.
+
+**Token expiry.** 12 hours is long enough to forget; every 401 `TOKEN_EXPIRED`
+clears the matching session and returns to the right login page.
+
+**Test database.** Tests truncate tables. They must only ever run against
+`DATABASE_URL_TEST`.
+
+**Guessing the contract.** Where the guide is silent (field limits, some
+response shapes), the specs record the choice in one place. Verify against the
+full guide before relying on it.
 
 ## What has to be true before this ships
 
-- A student can log in, find a post, and submit a claim; staff can log in,
-  see that claim, and resolve the post — all against the live backend.
-- The same post renders differently per role: staff see all claims + resolve
-  controls; students see only their own claim.
-- Archive/reopen works for active posts; a resolved post shows "Undo
-  resolution", not "Reopen".
-- Lost requests: staff see everyone's; a student sees only their own; owner
-  can mark found and reactivate.
-- `pnpm types && pnpm lint && pnpm test && pnpm build` all pass.
+- Admin logs in, creates a student, and that student logs in with the returned
+  OTP; regenerating the OTP makes the old one fail; deleting the user stops
+  their access.
+- A student claims a staff-posted item; staff see that claim, resolve the post;
+  the student's claim shows approved.
+- The same post and the same lists differ by role exactly as the Quick Guide
+  describes.
+- Archive/reopen works on active posts; a resolved post offers undo, not reopen;
+  delete is blocked while a claim is pending.
+- Lost requests: staff see everyone's; a student only their own; owner can mark
+  found, reactivate, edit and delete.
+- `pnpm types && pnpm lint && pnpm test && pnpm build` pass.

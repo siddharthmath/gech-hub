@@ -36,7 +36,7 @@ export const useSessionStore = create<SessionState>()(
       setHydrated: () => set({ hydrated: true }),
     }),
     {
-      name: "campus-os-session",
+      name: "gechhub-session",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (state) => ({

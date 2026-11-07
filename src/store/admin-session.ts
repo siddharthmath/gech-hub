@@ -36,7 +36,7 @@ export const useAdminSessionStore = create<AdminSessionState>()(
       setHydrated: () => set({ hydrated: true }),
     }),
     {
-      name: "campus-os-admin-session",
+      name: "gechhub-admin-session",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (state) => ({

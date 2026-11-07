@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-muted/40 px-5 py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <p className="text-sm font-semibold text-primary">CampusOS / Administration</p>
+          <p className="text-sm font-semibold text-primary">GECHhub / Administration</p>
           <CardTitle className="text-2xl">Admin sign in</CardTitle>
           <CardDescription>Use the administrator email and one-time password provided by your organisers.</CardDescription>
         </CardHeader>

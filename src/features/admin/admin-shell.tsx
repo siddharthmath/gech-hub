@@ -24,7 +24,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 w-full max-w-none items-center justify-between gap-4 px-4 sm:px-8 lg:px-12 2xl:px-16">
-          <Link href="/admin" className="font-semibold tracking-tight">CampusOS <span className="text-primary">/ Admin</span></Link>
+          <Link href="/admin" className="font-semibold tracking-tight">GECHhub <span className="text-primary">/ Admin</span></Link>
           <nav aria-label="Administration" className="flex items-center gap-2 sm:gap-4">
             <Link href="/admin/users" aria-current={pathname.startsWith("/admin/users") ? "page" : undefined} className={`rounded-md px-3 py-2 text-sm font-medium ${pathname.startsWith("/admin/users") ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}>Users</Link>
             <DropdownMenu>
@@ -36,7 +36,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <DropdownMenuContent align="end" className="w-72">
                 <DropdownMenuGroup><DropdownMenuLabel className="font-normal"><span className="flex items-center gap-3 py-1"><Avatar className="size-10"><AvatarFallback className="bg-primary/10 font-semibold text-primary">{me.data?.name?.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() ?? "A"}</AvatarFallback></Avatar><span className="grid min-w-0 gap-1"><span className="truncate font-semibold text-foreground">{me.data?.name ?? "Administrator"}</span><span className="truncate text-xs text-muted-foreground">{me.data?.email_id}</span></span></span></DropdownMenuLabel></DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <div className="px-2 py-2 text-xs text-muted-foreground"><span className="flex items-center gap-2"><ShieldCheck aria-hidden="true" className="size-4" />Administrator · {me.data?.institution_name ?? "CampusOS"}</span></div>
+                <div className="px-2 py-2 text-xs text-muted-foreground"><span className="flex items-center gap-2"><ShieldCheck aria-hidden="true" className="size-4" />Administrator · {me.data?.institution_name ?? "GECHhub"}</span></div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => { queryClient.removeQueries({ queryKey: ["admin"] }); logout(); router.replace("/admin-login"); }}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem>
               </DropdownMenuContent>

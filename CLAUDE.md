@@ -1,105 +1,96 @@
-# CampusOS FindIt UI
+# GECHhub
 
-A Next.js frontend for the already-deployed CampusOS API. The backend is live at
-https://campus-os-backend-8sjf.onrender.com and is treated as read-only truth:
-this project never mocks data, never invents fields, and never builds UI for
-endpoints that don't exist in the API cookbook.
-
-Why any rule exists is in `docs/project-doc.md`. This file is the rules. 
-- for every meaning full implementaions, update the `progress tracker.md` 
+One Next.js project holding the **frontend and the backend API** (route handlers
++ Prisma + PostgreSQL). Track 01: FindIt, Lost & Found. The contract is the API
+  Quick Guide (`docs/GECHhub_API_Quick_Guide.docx`): endpoints, methods, roles and
+  field names are fixed, never invented. Why a rule exists: `docs/project-doc.md`.
+  After every meaningful implementation, update `progress tracker.md`.
 
 ## Stack
 
-Next.js 15+ (App Router), React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui,
-Zustand for client stores, TanStack Query for server state, React Hook Form + Zod
-for forms, Vitest + React Testing Library for tests, Playwright for smoke tests.
-pnpm. If you're not certain about an API, read the docs inside the installed
-package rather than going from memory.
+Next.js 16 (App Router), React 19, strict TypeScript, Tailwind v4, shadcn/ui,
+Zustand, TanStack Query, React Hook Form + Zod, Prisma + PostgreSQL, Vitest
+(+ RTL, MSW), Playwright, pnpm. If unsure about an API, read the docs inside the
+installed package, not memory.
 
 ## Backend contract
 
-- Base URL: `https://campus-os-backend-8sjf.onrender.com`
-- All calls except login carry `Authorization: Bearer <token>`.
-- Tokens live 12 hours (`expires_in: 43200`). On 401 TOKEN_EXPIRED, clear only
-  the matching session and return to `/login` or `/admin-login` automatically.
-- Base paths used in this project: `/api/v1/auth/*`, `/api/v1/users/me`,
-  `/api/v1/findit/*`, and Phase 08 `/api/v1/admin/*`. Nothing else gets called.
-- Admin login and requests use a separate session store and auth scope; never
-  pass an admin token to FindIt.
-- Interactive API explorer lives at `{baseUrl}/docs` — verify any doubt there
-  before coding around it.
+- Same origin: the UI calls `/api/v1/...`. `NEXT_PUBLIC_API_URL` is an override.
+- Public paths: `/api/v1/auth/*`, `/users/me`, `/findit/*`, `/admin/*`, and
+  `GET /api/health`. Nothing else.
+- Bearer JWT on everything except login and health (HS256, 12h,
+  `{ sub, role, teamId, dept? }`).
+- Lists: `{ items, count, next_cursor }`, newest first. Errors always:
+  `{ error: { code, message, details }, request_id }`; clients branch on `code`.
+- IDs are server-made: `FND-` post, `CLM-` claim, `LST-` lost request.
+- Dates: `YYYY-MM-DD` for date-only fields; UTC timestamps, shown in IST.
+- Admin and user sessions are separate; never send an admin token to FindIt.
+- Code/status map and per-endpoint rules: `docs/specs/README.md` and the specs.
 
 ## How we work
 
-Spec driven. Nothing gets built without a spec.
+Spec driven; nothing is built without a spec.
+- `docs/specs/spec-NN-*.md`: backend, **one goal, 2 endpoints, test cases each**.
+- `docs/specs/phase-NN-*.md`: frontend phases.
 
-- `docs/project-doc.md` — what this app is and every decision behind it.
-- `docs/specs/phase-NN.md` — one per phase, written before it starts. Behaviour
-  plus an acceptance check, never just filenames.
-- This file — always true, read on every prompt.
+**Starting a spec:** read this file and that spec, build exactly that, write its
+tests, stop. One spec at a time, in order. **Fresh context:** read the specs
+README, git log and tracker; say what you worked out before building.
+**Acceptance is mine to run.** You verify `pnpm types`, `lint`, `test`, `build`.
+If a spec is ambiguous or wrong, say so; reset rather than patch.
 
-**Starting a phase.** Read this file and that phase's spec. Build what the spec
-asks, then stop.
+## Backend layout (enforced)
 
-**Dropped into a fresh context?** Look at `docs/specs/` and the git log. The
-last passing phase is the last commit. Say what you've worked out before building.
+    app/api/v1/<path>/route.ts     thin: parse → service → respond, wrapped in withApi
+    src/server/core/               errors, withApi, validate, ids, pagination,
+                                   auth, rate-limit, storage, env, db
+    src/server/modules/<feature>/  schemas · service · repository · serializer
+    prisma/ (schema, migrations, seed)    tests/<feature>/ + tests/factories.ts
 
-**The acceptance check is mine to run, not yours.** It's a manual browser list.
-Build so the listed things are true, then say it's ready. What you verify
-yourself: `pnpm types`, `pnpm lint`, `pnpm test`, `pnpm build`.
+- Route → service → repository. Rules and transactions live in services;
+  **only repositories import Prisma.**
+- Handlers throw `ApiError(code, message, details?)`; never hand-build errors.
+- `requireAuth(request, { roles })` re-reads the user from the DB.
+- Owner-scoped records answer **404** to non-owners.
+- Multi-row state changes run in one transaction.
+- Files go through `core/storage`; signed `url`s last ~15 min and are never stored.
+- Migrations are additive, one per spec; never edit an applied one.
 
-**When a phase comes out wrong, reset rather than patch.** Prompting on top of
-wrong code three times leaves code nobody understands. If a spec is ambiguous,
-say so before you build.
+**Stay evolutionary:** a new feature is a new module + route folder + migration,
+with no edits to another module's repository. `core/` only grows. Responses only
+gain optional fields. Policy (limits, rate-limit, `assertCanManagePost`) lives in
+one place. Don't build ahead of the current spec.
 
-## Architecture (MVVM, enforced by directory layout)
+## Frontend (MVVM)
 
-- `src/lib/api/` — the ONLY place that knows the base URL and fetch. Every call
-  goes through one typed client: inject token, parse `{error:{code,message}}`,
-  map HTTP codes. Nothing else in the app calls `fetch` directly.
-- `src/lib/api/types.ts` — TypeScript types transcribed 1:1 from the cookbook
-  JSON (FoundPost, Claim, LostRequest, Profile, AdminProfile, AdminUser, Paged<T>, ApiError).
-- `src/viewmodels/` — per-screen hooks (useFoundPosts, useClaims, useAdminUsers, ...). All
-  TanStack Query + Zustand lives here. Components never import the api client.
-- `src/components/` — presentational only. Props in, events out. No fetch, no
-  stores, no router calls.
-- `src/app/` — routes and layout only: login, (app)/findit, (app)/lost-requests,
-  admin-login, admin.
-- Route guards read the matching session store; the API still enforces auth, guards are UX
-  not security.
+`src/lib/api/` is the only code that knows the base URL or calls `fetch`; types
+are transcribed 1:1 from the contract. `src/viewmodels/` owns TanStack Query and
+Zustand. `src/components/` is presentational. `app/` is routes and layout; guards
+are UX, not security.
 
 ## Conventions
 
-Strict TypeScript, no `any`. If a type is genuinely awkward, say so rather than
-casting.
-
-Comment the decisions, not the syntax.
-
-One obvious way to do something beats a configurable one.
-
-User text is rendered as text, never as HTML — React escapes by default, never
-use `dangerouslySetInnerHTML`.
-
-Dates from the API are UTC (`...Z`); display in IST. Dates like `found_on` are
-`YYYY-MM-DD` and render as-is.
-
-File `url` fields expire in ~15 minutes — use them only for `<img>` preview,
-never store them. Downloads go through token-authenticated endpoints.
-
-Status color system, identical everywhere: active = green, resolved = blue,
-archived = gray, pending = amber, rejected = red.
+- Strict TS, no `any`. Comment decisions, not syntax. One obvious way.
+- Validate every body/query with Zod; limits are named constants.
+- User text renders as text; never `dangerouslySetInnerHTML`.
+- OTPs are credentials: never logged, never in URLs, returned only by admin
+  endpoints.
+- Tests: Vitest on `DATABASE_URL_TEST` only; call handlers with `new Request()`;
+  assert status + `error.code`. Cover happy path, auth, role, validation and
+  every code the spec lists.
+- Status colors: active green, resolved blue, archived gray, pending amber,
+  rejected red. Storage keys and events use the `gechhub` prefix.
 
 ## Things not to do
 
-Breaking one of these is worse than not finishing.
-
-- **Never call an endpoint that isn't in the cookbook.** If the UI wants data
-  the API doesn't send, the UI changes, not the backend.
-- **Never show fields the current role can't see.** Staff see all claims;
-  students see only their own. Hide, don't disable.
-- **Don't install a package without asking.** Name it, say what for, wait.
-- **Don't build ahead of the current phase.** No scaffolding for what's coming.
-- **Don't weaken a check to make it pass.** A check that can't run must fail loudly.
-- **Don't leave the build broken.** Report the failure instead of working around it.
-- **Don't hard-code data.** Sample values from the cookbook are for dropdowns
-  and placeholders only; lists always come from the API.
+Breaking one is worse than not finishing.
+- **Never add or change an endpoint outside the Quick Guide.** If the guide is
+  silent, say so and ask. Internal helper routes (e.g. `app/api/files`) must be
+  named in their spec.
+- **Never import Prisma outside a repository.**
+- **Never expose fields the role can't see.** Hide, don't disable.
+- **Don't install a package without asking.** Name it, say why, wait.
+- **Don't weaken a check.** A check that can't run must fail loudly (missing
+  `DATABASE_URL_TEST` fails the run). Never test against a non-test database.
+- **Don't leave the build broken.** Report failures instead of working around them.
+- **Don't hard-code data.** Lists come from the database.

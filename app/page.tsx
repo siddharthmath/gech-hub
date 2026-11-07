@@ -32,7 +32,7 @@ export default function Home() {
           <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground">
             C
           </span>
-          <span className="text-lg font-semibold tracking-tight">CampusOS</span>
+          <span className="text-lg font-semibold tracking-tight">GECHhub</span>
         </a>
         <nav aria-label="Main navigation" className="flex items-center gap-3 text-sm font-medium sm:gap-6">
           <ThemeToggle />
@@ -58,7 +58,7 @@ export default function Home() {
             Lost something? <span className="text-primary">Let’s find it.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
-            CampusOS brings your campus lost and found into one clear place. Browse found items, share a claim, and let staff help make the connection.
+            GECHhub brings your campus lost and found into one clear place. Browse found items, share a claim, and let staff help make the connection.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button nativeButton={false} render={<a href="#findit" />} className="h-12 gap-2 px-5 text-sm font-semibold">
@@ -76,7 +76,7 @@ export default function Home() {
           <div className="relative rounded-2xl border border-border bg-card p-5 shadow-[0_20px_60px_-35px_rgba(38,45,90,0.32)] sm:p-7">
             <div className="flex items-center justify-between border-b border-border pb-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">CampusOS / Track 01</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">GECHhub / Track 01</p>
                 <p className="mt-1 text-xl font-semibold tracking-tight">FindIt</p>
               </div>
               <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">Lost &amp; Found</span>
@@ -141,7 +141,7 @@ export default function Home() {
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-[120rem] flex-col gap-2 px-5 py-7 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12 2xl:px-16">
-          <p className="font-semibold text-foreground">CampusOS</p>
+          <p className="font-semibold text-foreground">GECHhub</p>
           <p>FindIt · Track 01 · Built for the campus community</p>
         </div>
       </footer>

@@ -13,7 +13,7 @@ export interface ApiCallOptions {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  "https://campus-os-backend-8sjf.onrender.com";
+  "";
 
 export async function apiCall<T>(
   method: ApiMethod,
@@ -67,7 +67,7 @@ export async function apiCall<T>(
         useSessionStore.getState().logout();
       }
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("campus-os:session-expired", {
+        window.dispatchEvent(new CustomEvent("gechhub:session-expired", {
           detail: { scope: authScope },
         }));
       }

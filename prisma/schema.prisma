@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  student
+  faculty
+  office_staff
+}
+
+model User {
+  emailId     String   @id @map("email_id")
+  role        Role
+  name        String
+  phoneNumber String?  @map("phone_number")
+  usn         String?
+  dept        String?
+  designation String?
+  otp         String
+  teamId      String   @map("team_id")
+  team        Team     @relation(fields: [teamId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([role, createdAt, emailId])
+}
+
+model Team {
+  id          String @id @default(cuid())
+  institution String
+  emailDomain String @map("email_domain")
+  users       User[]
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  key       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+}
