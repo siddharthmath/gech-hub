@@ -6,6 +6,7 @@ Keep this file short. Read the phase specs + code for detail.
 
 - **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`
 - **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow)
+- **GECHhub Backend Spec 11 — Create and list users** — Implemented; route tests added; acceptance pending
 
 - **Phase 03 — Item detail + claims** — Implemented; manual acceptance pending
 - **Phase 04 — Staff posting + resolution** — Implemented; manual acceptance pending
