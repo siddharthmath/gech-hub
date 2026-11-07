@@ -5,7 +5,7 @@ Keep this file short. Read the phase specs + code for detail.
 ## Phase
 
 - **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`
-- **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; route tests need a configured dedicated `DATABASE_URL_TEST`
+- **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow)
 
 - **Phase 03 — Item detail + claims** — Implemented; manual acceptance pending
 - **Phase 04 — Staff posting + resolution** — Implemented; manual acceptance pending
@@ -53,7 +53,7 @@ Keep this file short. Read the phase specs + code for detail.
 | 08 | Admin user management | Implemented; live admin backend acceptance pending — `../app/admin-login/page.tsx`, `app/admin/*`, `src/features/admin/*`, `src/store/admin-session.ts`, `src/viewmodels/use-admin-users.ts` |
 | 09 | Responsive role surfaces | Implemented; student/faculty/staff live-session checks pending — `specs/phase-09-responsive-audit.md`, shared dialog, admin cards, responsive hooks |
 | 00 | GECHhub backend readiness | Implemented — health route and shared API foundation |
-| 10 | Admin sign-in | Implemented — admin login/profile routes, auth guard, persistent lockout, seeded test team/accounts and route tests; browser login/profile verified |
+| 10 | Admin sign-in | Implemented — admin login/profile routes, auth guard, persistent lockout, seeded test team/accounts and route tests; browser login/profile verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow) |
 
 ## Architecture invariants
 
@@ -67,7 +67,7 @@ Keep this file short. Read the phase specs + code for detail.
 ## Open
 
 - Complete Phase 01 and Phase 02 manual acceptance checks.
-- Run GECHhub Spec 10 route tests after configuring the dedicated `DATABASE_URL_TEST`; complete the outstanding Phase 06 unit/Playwright coverage.
+- Complete the outstanding Phase 06 unit/Playwright coverage.
 - Complete Phase 08 live acceptance using organiser-provided admin credentials and the issued team email domain.
 
 ## Context files (read order for new work)
