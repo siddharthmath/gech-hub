@@ -84,3 +84,4 @@ Keep this file short. Read the phase specs + code for detail.
 5. This tracker
 
 - **GECHhub Backend Spec 16 — View and edit a found item** — Implemented; authenticated detail and staff edit/archive/reopen routes, image replacement/removal, and route tests added; acceptance pending
+- **GECHhub Backend Spec 17 — Claim an item** — Implemented; claim model/migration, authenticated create and role-scoped paginated list routes, and route tests added; acceptance pending

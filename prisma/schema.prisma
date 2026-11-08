@@ -26,6 +26,7 @@ model User {
   teamId      String   @map("team_id")
   team        Team     @relation(fields: [teamId], references: [id])
   foundPosts  FoundPost[]
+  claims      Claim[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -48,10 +49,33 @@ model FoundPost {
   postedBy      String           @map("posted_by")
   poster        User             @relation(fields: [postedBy], references: [emailId], onDelete: Restrict)
   images        FoundPostImage[]
+  claims        Claim[]
   createdAt     DateTime         @default(now()) @map("created_at")
   updatedAt     DateTime         @updatedAt @map("updated_at")
 
   @@index([status, createdAt, id])
+}
+
+enum Decision {
+  pending
+  approved
+  rejected
+}
+
+model Claim {
+  id         String     @id
+  postId     String     @map("post_id")
+  post       FoundPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  claimantId String     @map("claimant_id")
+  claimant   User       @relation(fields: [claimantId], references: [emailId], onDelete: Cascade)
+  message    String
+  decision   Decision   @default(pending)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@unique([postId, claimantId])
+  @@index([postId, createdAt, id])
+  @@index([claimantId, createdAt, id])
 }
 
 model FoundPostImage {
