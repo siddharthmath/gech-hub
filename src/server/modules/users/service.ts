@@ -1,7 +1,7 @@
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
 import { generateOtp } from "@/src/server/core/otp";
-import { createUser, emailExists, findManagedUser, listUsers, updateManagedUser } from "@/src/server/modules/users/repository";
+import { createUser, deleteManagedUser, emailExists, findManagedUser, listUsers, updateManagedUser, updateManagedUserOtp } from "@/src/server/modules/users/repository";
 import { adminUser } from "@/src/server/modules/users/serializer";
 import { parseCreateUser, parseUserListQuery, parseUserUpdate } from "@/src/server/modules/users/schemas";
 
@@ -43,4 +43,26 @@ export async function updateCampusUser(emailId: string, input: unknown, teamId: 
   const data = parseUserUpdate(input, user.role);
   const updated = await updateManagedUser(normalizedEmail, teamId, data);
   return adminUser(updated);
+}
+
+export async function deleteCampusUser(emailId: string, teamId: string) {
+  const normalizedEmail = emailId.toLowerCase();
+  const user = await findManagedUser(normalizedEmail, teamId);
+  if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
+  try {
+    await deleteManagedUser(normalizedEmail);
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2003") {
+      throw new ApiError(409, "USER_HAS_RECORDS", "This user cannot be deleted because they have related records.");
+    }
+    throw error;
+  }
+  return { deleted: true, email_id: normalizedEmail };
+}
+
+export async function regenerateCampusUserOtp(emailId: string, teamId: string) {
+  const normalizedEmail = emailId.toLowerCase();
+  const user = await findManagedUser(normalizedEmail, teamId);
+  if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
+  return adminUser(await updateManagedUserOtp(normalizedEmail, generateOtp()));
 }

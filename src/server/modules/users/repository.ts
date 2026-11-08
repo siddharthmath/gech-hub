@@ -50,3 +50,11 @@ export function updateManagedUser(emailId: string, teamId: string, data: {
     },
   });
 }
+
+export function deleteManagedUser(emailId: string) {
+  return prisma.user.delete({ where: { emailId } });
+}
+
+export function updateManagedUserOtp(emailId: string, otp: string) {
+  return prisma.user.update({ where: { emailId }, data: { otp } });
+}

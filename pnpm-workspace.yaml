@@ -1,4 +1,5 @@
 allowBuilds:
   '@prisma/engines': true
   esbuild: true
+  pnpm: set this to true or false
   prisma: true
