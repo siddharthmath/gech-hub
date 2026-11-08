@@ -13,6 +13,33 @@ export async function createFoundPost(data: { id: string; title: string; descrip
   });
 }
 
+export function getFoundPost(id: string) {
+  return prisma.foundPost.findUnique({ where: { id }, include: includePost });
+}
+
+export async function updateFoundPost(id: string, input: {
+  title?: string; description?: string | null; locationFound?: string | null; foundOn?: Date;
+  status?: "active" | "archived"; replaceImages: boolean; images: Array<UploadedImage & { storageKey: string }>;
+}) {
+  return prisma.$transaction(async (tx) => {
+    if (input.replaceImages) {
+      await tx.foundPostImage.deleteMany({ where: { postId: id } });
+      if (input.images.length) await tx.foundPostImage.createMany({ data: input.images.map((image, position) => ({ postId: id, storageKey: image.storageKey, contentType: image.contentType, sizeBytes: image.bytes.byteLength, position })) });
+    }
+    return tx.foundPost.update({
+      where: { id },
+      data: {
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.locationFound !== undefined ? { locationFound: input.locationFound } : {}),
+        ...(input.foundOn !== undefined ? { foundOn: input.foundOn } : {}),
+        ...(input.status !== undefined ? { status: input.status } : {}),
+      },
+      include: includePost,
+    });
+  });
+}
+
 export function listFoundPosts(input: { status: "active" | "archived"; limit: number; cursor: CursorPosition | null }) {
   return prisma.foundPost.findMany({
     where: { status: input.status, ...(input.cursor ? { OR: [{ createdAt: { lt: input.cursor.createdAt } }, { createdAt: input.cursor.createdAt, id: { lt: input.cursor.id } }] } : {}) },

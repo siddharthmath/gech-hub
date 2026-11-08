@@ -12,21 +12,36 @@ function validation(field: string, message: string): never {
 }
 
 export async function parseCreatePost(form: FormData) {
-  const title = form.get("title");
-  const description = form.get("description");
-  const location = form.get("location_found");
-  const foundOn = form.get("found_on");
-  if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 100) validation("title", "Title must be 3 to 100 characters.");
-  if (description !== null && (typeof description !== "string" || description.length > 2000)) validation("description", "Description must not exceed 2000 characters.");
-  if (location !== null && (typeof location !== "string" || location.trim().length < 2 || location.trim().length > 120)) validation("location_found", "Location must be 2 to 120 characters.");
-  let foundDate: Date | null = null;
-  if (foundOn !== null) {
-    if (typeof foundOn !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(foundOn)) validation("found_on", "Date must use YYYY-MM-DD format.");
+  const fields = parseEditableFields({ title: form.get("title"), description: form.get("description") ?? undefined, location_found: form.get("location_found") ?? undefined, found_on: form.get("found_on") ?? undefined }, true);
+  const images = await parseImageEntries(form.getAll("images"));
+  return { ...fields, title: fields.title as string, description: fields.description ?? null, locationFound: fields.locationFound ?? null, foundOn: fields.foundOn ?? null, images };
+}
+
+function parseEditableFields(input: Record<string, unknown>, requireTitle = false) {
+  const title = input.title;
+  const description = input.description;
+  const location = input.location_found;
+  const foundOn = input.found_on;
+  if (requireTitle && (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 100)) validation("title", "Title must be 3 to 100 characters.");
+  if (title !== undefined && (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 100)) validation("title", "Title must be 3 to 100 characters.");
+  if (description !== undefined && description !== null && (typeof description !== "string" || description.length > 2000)) validation("description", "Description must not exceed 2000 characters.");
+  if (location !== undefined && location !== null && (typeof location !== "string" || location.trim().length < 2 || location.trim().length > 120)) validation("location_found", "Location must be 2 to 120 characters.");
+  let foundDate: Date | undefined;
+  if (foundOn !== undefined) {
+    if (foundOn === null || typeof foundOn !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(foundOn)) validation("found_on", "Date must use YYYY-MM-DD format.");
     const parsed = new Date(`${foundOn}T00:00:00.000Z`);
     if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== foundOn || parsed.getTime() > new Date().setUTCHours(0, 0, 0, 0)) validation("found_on", "Date must be valid and not in the future.");
     foundDate = parsed;
   }
-  const entries = form.getAll("images");
+  return {
+    ...(title !== undefined ? { title: (title as string).trim() } : {}),
+    ...(description !== undefined ? { description: description as string | null } : {}),
+    ...(location !== undefined ? { locationFound: location === null ? null : (location as string).trim() } : {}),
+    ...(foundDate !== undefined ? { foundOn: foundDate } : {}),
+  };
+}
+
+async function parseImageEntries(entries: FormDataEntryValue[]): Promise<UploadedImage[]> {
   if (entries.length > MAX_IMAGES) throw new ApiError(422, "TOO_MANY_IMAGES", "At most 5 images are allowed.", entries.map((entry) => ({ field: entry instanceof File ? entry.name : "images", message: "At most 5 images are allowed." })));
   const images: UploadedImage[] = [];
   for (const entry of entries) {
@@ -37,7 +52,26 @@ export async function parseCreatePost(form: FormData) {
     if (!allowedTypes.has(entry.type) || detected !== entry.type) throw new ApiError(422, "UNSUPPORTED_IMAGE_TYPE", "Only JPEG, PNG, and WebP images are supported.", [{ field: entry.name, message: "File content does not match a supported image type." }]);
     images.push({ file: entry, bytes, contentType: detected });
   }
-  return { title: title.trim(), description: typeof description === "string" && description ? description : null, locationFound: typeof location === "string" && location ? location.trim() : null, foundOn: foundDate, images };
+  return images;
+}
+
+export async function parsePostPatch(input: unknown, form: FormData | null) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) validation("body", "Expected an object.");
+  const body = input as Record<string, unknown>;
+  const allowed = new Set(["title", "description", "location_found", "found_on", "status", "images", "remove_images"]);
+  const unknown = Object.keys(body).find((key) => !allowed.has(key));
+  if (unknown) validation(unknown, "Field is not editable.");
+  const imagesSent = form !== null && form.getAll("images").length > 0;
+  if (body.images !== undefined && form === null) validation("images", "Images must be uploaded as multipart files.");
+  if (body.images !== undefined && form !== null) validation("images", "Images must be uploaded as multipart files.");
+  const removeImages = body.remove_images === true || body.remove_images === "true";
+  if (body.remove_images !== undefined && body.remove_images !== true && body.remove_images !== false && body.remove_images !== "true" && body.remove_images !== "false") validation("remove_images", "remove_images must be true or false.");
+  const status = body.status;
+  if (status !== undefined && status !== "active" && status !== "archived") validation("status", "Status must be active or archived.");
+  const fields = parseEditableFields(body);
+  if (Object.keys(body).length === 0 && !imagesSent) validation("body", "At least one editable field is required.");
+  if (imagesSent && removeImages) validation("images", "Images cannot be uploaded while remove_images is true.");
+  return { ...fields, ...(status !== undefined ? { status: status as "active" | "archived" } : {}), replaceImages: imagesSent, removeImages, images: imagesSent && form ? await parseImageEntries(form.getAll("images")) : [] };
 }
 
 function detectType(bytes: Uint8Array): string | null {
@@ -48,7 +82,7 @@ function detectType(bytes: Uint8Array): string | null {
 }
 
 export function parsePostListQuery(query: URLSearchParams) {
-  const status = query.get("status") ?? "active";
+  const status = (query.get("status") ?? "active") as "active" | "archived";
   if (status !== "active" && status !== "archived") validation("status", "Status must be active or archived.");
   const limit = parseLimit(query.get("limit"));
   const rawCursor = query.get("cursor");

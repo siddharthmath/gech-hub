@@ -82,3 +82,5 @@ Keep this file short. Read the phase specs + code for detail.
 3. `architecture.md`
 4. Active `docs/specs/phase-NN-*.md`
 5. This tracker
+
+- **GECHhub Backend Spec 16 — View and edit a found item** — Implemented; authenticated detail and staff edit/archive/reopen routes, image replacement/removal, and route tests added; acceptance pending
