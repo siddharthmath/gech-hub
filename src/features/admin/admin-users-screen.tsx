@@ -239,16 +239,18 @@ function EditUserDialog({ emailId, open, onOpenChange, onSaved }: { emailId: str
     if (!user) return;
     setErrors({});
     setRequestError(null);
-    const input: AdminUserUpdate = {
-      name: values.name?.trim(),
-      phone_number: values.phone_number?.trim(),
-      ...(user.role === "student" ? { usn: values.usn?.trim().toUpperCase(), dept: values.dept?.trim() } : {}),
-      ...(user.role === "faculty" ? { designation: values.designation?.trim() } : {}),
-      ...(user.role === "office_staff" ? { dept: values.dept?.trim(), designation: values.designation?.trim() } : {}),
-    };
-    for (const key of Object.keys(input) as (keyof AdminUserUpdate)[]) {
-      if (input[key] === undefined) delete input[key];
+    const editableFields: (keyof AdminUserUpdate)[] = ["name", "phone_number"];
+    if (user.role === "student") editableFields.push("usn", "dept");
+    if (user.role === "faculty") editableFields.push("designation");
+    if (user.role === "office_staff") editableFields.push("dept", "designation");
+    const input: AdminUserUpdate = {};
+    for (const field of editableFields) {
+      const value = values[field]?.trim();
+      if (value === undefined) continue;
+      const normalized = field === "usn" ? value.toUpperCase() : value;
+      if (normalized !== (user[field] ?? "")) input[field] = normalized;
     }
+    if (Object.keys(input).length === 0) return;
     try {
       await update.mutateAsync(input);
       onSaved();

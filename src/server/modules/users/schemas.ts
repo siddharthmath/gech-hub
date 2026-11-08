@@ -60,5 +60,47 @@ export function parseUserListQuery(query: URLSearchParams) {
   }
   const limit = parseLimit(query.get("limit"));
   const rawCursor = query.get("cursor");
-  return { role, limit, cursor: rawCursor ? decodeCursor(rawCursor) : null };
+  return { role: role as "student" | "faculty" | "office_staff" | null, limit, cursor: rawCursor ? decodeCursor(rawCursor) : null };
+}
+
+const editableSchemas = {
+  student: z.object({
+    name: sharedFields.name.optional(),
+    phone_number: sharedFields.phone_number.optional(),
+    usn: studentSchema.shape.usn.optional(),
+    dept: studentSchema.shape.dept.optional(),
+  }).strict(),
+  faculty: z.object({
+    name: sharedFields.name.optional(),
+    phone_number: sharedFields.phone_number.optional(),
+    designation: facultySchema.shape.designation.optional(),
+  }).strict(),
+  office_staff: z.object({
+    name: sharedFields.name.optional(),
+    phone_number: sharedFields.phone_number.optional(),
+    dept: officeStaffSchema.shape.dept.optional(),
+    designation: officeStaffSchema.shape.designation.optional(),
+  }).strict(),
+} as const;
+
+export function parseUserUpdate(input: unknown, role: "student" | "faculty" | "office_staff") {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field: "body", message: "Expected a non-empty object." }]);
+  }
+  const body = input as Record<string, unknown>;
+  if (Object.keys(body).length === 0) {
+    throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field: "body", message: "At least one editable field is required." }]);
+  }
+  if (Object.hasOwn(body, "role") || Object.hasOwn(body, "email_id")) {
+    const field = Object.hasOwn(body, "role") ? "role" : "email_id";
+    throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field, message: "Account identity fields are read-only." }]);
+  }
+  const allowed = fieldsByRole[role];
+  const disallowed = Object.keys(body).find((field) => !allowed.has(field));
+  if (disallowed) {
+    throw new ApiError(422, "FIELD_NOT_ALLOWED_FOR_ROLE", "A field is not allowed for this role.", [{ field: disallowed, message: `The ${disallowed} field is not allowed for ${role}.` }]);
+  }
+  const result = editableSchemas[role].safeParse(body);
+  if (!result.success) throw result.error;
+  return result.data;
 }

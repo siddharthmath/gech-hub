@@ -22,10 +22,10 @@ export function makeTeam(overrides: Partial<Pick<Team, "id" | "institution" | "e
   return prisma.team.create({ data: { id: "test-team", institution: "Test Institution", emailDomain: "example.edu", ...overrides } });
 }
 
-export async function makeUser(overrides: Partial<Pick<User, "emailId" | "role" | "name" | "phoneNumber" | "usn" | "dept" | "designation" | "otp">> = {}) {
+export async function makeUser(overrides: Partial<Pick<User, "emailId" | "role" | "name" | "phoneNumber" | "usn" | "dept" | "designation" | "otp" | "teamId">> = {}) {
   const team = await makeTeam({ id: `team-${Math.random().toString(16).slice(2)}` });
   return prisma.user.create({
-    data: { emailId: "student@example.edu", role: "student", name: "Example Student", otp: "123456", teamId: team.id, ...overrides },
+    data: { emailId: "student@example.edu", role: "student", name: "Example Student", otp: "123456", ...overrides, teamId: overrides.teamId ?? team.id },
   });
 }
 

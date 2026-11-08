@@ -1,9 +1,9 @@
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
 import { generateOtp } from "@/src/server/core/otp";
-import { createUser, emailExists, listUsers } from "@/src/server/modules/users/repository";
+import { createUser, emailExists, findManagedUser, listUsers, updateManagedUser } from "@/src/server/modules/users/repository";
 import { adminUser } from "@/src/server/modules/users/serializer";
-import { parseCreateUser, parseUserListQuery } from "@/src/server/modules/users/schemas";
+import { parseCreateUser, parseUserListQuery, parseUserUpdate } from "@/src/server/modules/users/schemas";
 
 export async function createCampusUser(input: unknown, teamId: string) {
   const data = parseCreateUser(input);
@@ -24,4 +24,23 @@ export async function getCampusUsers(query: URLSearchParams, teamId: string) {
   const rows = await listUsers({ teamId, ...options });
   const page = getPage(rows.map((user) => ({ ...user, id: user.emailId })), options.limit);
   return { items: page.items.map(adminUser), count: page.count, next_cursor: page.next_cursor };
+}
+
+function managedRole(role: string): role is "student" | "faculty" | "office_staff" {
+  return role === "student" || role === "faculty" || role === "office_staff";
+}
+
+export async function getCampusUser(emailId: string, teamId: string) {
+  const user = await findManagedUser(emailId.toLowerCase(), teamId);
+  if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
+  return adminUser(user);
+}
+
+export async function updateCampusUser(emailId: string, input: unknown, teamId: string) {
+  const normalizedEmail = emailId.toLowerCase();
+  const user = await findManagedUser(normalizedEmail, teamId);
+  if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
+  const data = parseUserUpdate(input, user.role);
+  const updated = await updateManagedUser(normalizedEmail, teamId, data);
+  return adminUser(updated);
 }
