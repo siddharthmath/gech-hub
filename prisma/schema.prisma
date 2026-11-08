@@ -25,10 +25,45 @@ model User {
   otp         String
   teamId      String   @map("team_id")
   team        Team     @relation(fields: [teamId], references: [id])
+  foundPosts  FoundPost[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([role, createdAt, emailId])
+}
+
+enum PostStatus {
+  active
+  archived
+}
+
+model FoundPost {
+  id            String           @id
+  title         String
+  description   String?
+  locationFound String?          @map("location_found")
+  foundOn       DateTime?         @map("found_on") @db.Date
+  status        PostStatus       @default(active)
+  resolved      Boolean          @default(false)
+  postedBy      String           @map("posted_by")
+  poster        User             @relation(fields: [postedBy], references: [emailId], onDelete: Restrict)
+  images        FoundPostImage[]
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  @@index([status, createdAt, id])
+}
+
+model FoundPostImage {
+  id          String    @id @default(cuid())
+  postId      String    @map("post_id")
+  post        FoundPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  storageKey  String    @map("storage_key")
+  contentType String    @map("content_type")
+  sizeBytes   Int       @map("size_bytes")
+  position    Int
+
+  @@index([postId, position])
 }
 
 model Team {

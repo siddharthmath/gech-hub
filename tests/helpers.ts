@@ -33,6 +33,10 @@ export function makeAdmin(overrides: Partial<Pick<User, "emailId" | "name" | "ot
   return makeUser({ emailId: "admin@example.edu", name: "Administrator", role: "admin", otp: "123456", ...overrides });
 }
 
+export function makeStaff(overrides: Partial<Pick<User, "emailId" | "name" | "dept" | "otp" | "teamId">> = {}) {
+  return makeUser({ emailId: "staff@example.edu", name: "Office Staff", role: "office_staff", dept: "Facilities", otp: "123456", ...overrides });
+}
+
 export async function tokenFor(user: Pick<User, "emailId" | "role" | "dept" | "teamId">) {
   return signAccessToken({ sub: user.emailId, role: user.role satisfies Role, teamId: user.teamId, ...(user.dept ? { dept: user.dept } : {}) });
 }
