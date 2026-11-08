@@ -2,10 +2,9 @@ export type Role = "admin" | "student" | "faculty" | "office_staff";
 
 export interface Profile {
   role: Role;
-  team_id: string;
   name: string;
   email_id: string;
-  phone_number?: string;
+  phone_number: string | null;
   dept?: string;
   designation?: string;
   usn?: string;

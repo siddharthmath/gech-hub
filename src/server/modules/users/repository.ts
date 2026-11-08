@@ -30,6 +30,10 @@ export function emailExists(emailId: string) {
   return prisma.user.findUnique({ where: { emailId }, select: { emailId: true } });
 }
 
+export function findUserByEmail(emailId: string) {
+  return prisma.user.findUnique({ where: { emailId } });
+}
+
 export function findManagedUser(emailId: string, teamId: string) {
   return prisma.user.findFirst({
     where: { emailId, teamId, role: { in: ["student", "faculty", "office_staff"] } },

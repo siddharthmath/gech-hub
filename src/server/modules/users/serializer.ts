@@ -14,3 +14,16 @@ export function adminUser(user: User) {
   if (user.role === "office_staff") return { ...base, dept: user.dept, designation: user.designation };
   return base;
 }
+
+export function userProfile(user: User) {
+  const base = {
+    email_id: user.emailId,
+    role: user.role,
+    name: user.name,
+    phone_number: user.phoneNumber,
+  };
+  if (user.role === "student") return { ...base, usn: user.usn, dept: user.dept };
+  if (user.role === "faculty") return { ...base, designation: user.designation };
+  if (user.role === "office_staff") return { ...base, dept: user.dept, designation: user.designation };
+  return base;
+}

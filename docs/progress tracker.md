@@ -10,6 +10,7 @@ Keep this file short. Read the phase specs + code for detail.
 - **GECHhub Backend Spec 12 — View and edit a user** — Implemented; route tests added; production build passes; browser verified admin login, user detail GET, profile PATCH, and refreshed values in the edit dialog
 
 - **GECHhub Backend Spec 13 — Remove user, reissue OTP** — Implemented; route tests added; types, lint, and build pass; tests pending DATABASE_URL_TEST
+- **GECHhub Backend Spec 14 — User sign-in** — Implemented; user OTP login and fresh role-scoped profile routes added with route tests; acceptance pending
 - **Phase 03 — Item detail + claims** — Implemented; manual acceptance pending
 - **Phase 04 — Staff posting + resolution** — Implemented; manual acceptance pending
 - **Phase 05 — Lost requests** — Implemented; manual acceptance pending

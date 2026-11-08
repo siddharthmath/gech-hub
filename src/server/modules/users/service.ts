@@ -1,8 +1,8 @@
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
 import { generateOtp } from "@/src/server/core/otp";
-import { createUser, deleteManagedUser, emailExists, findManagedUser, listUsers, updateManagedUser, updateManagedUserOtp } from "@/src/server/modules/users/repository";
-import { adminUser } from "@/src/server/modules/users/serializer";
+import { createUser, deleteManagedUser, emailExists, findManagedUser, findUserByEmail, listUsers, updateManagedUser, updateManagedUserOtp } from "@/src/server/modules/users/repository";
+import { adminUser, userProfile } from "@/src/server/modules/users/serializer";
 import { parseCreateUser, parseUserListQuery, parseUserUpdate } from "@/src/server/modules/users/schemas";
 
 export async function createCampusUser(input: unknown, teamId: string) {
@@ -65,4 +65,10 @@ export async function regenerateCampusUserOtp(emailId: string, teamId: string) {
   const user = await findManagedUser(normalizedEmail, teamId);
   if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
   return adminUser(await updateManagedUserOtp(normalizedEmail, generateOtp()));
+}
+
+export async function getUserProfile(emailId: string) {
+  const user = await findUserByEmail(emailId);
+  if (!user || !managedRole(user.role)) throw new ApiError(404, "NOT_FOUND", "User not found.");
+  return userProfile(user);
 }
