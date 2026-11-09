@@ -10,8 +10,12 @@ export interface StorageDriver {
 }
 
 const root = path.resolve(process.env.FILE_STORAGE_DIR ?? path.join(process.cwd(), ".data", "files"));
-const secret = process.env.FILE_SIGNING_SECRET ?? process.env.JWT_SECRET;
-if (!secret || secret.length < 32) throw new Error("FILE_SIGNING_SECRET or JWT_SECRET (at least 32 characters) is required for file links.");
+function requireSigningSecret(): string {
+  const secret = process.env.FILE_SIGNING_SECRET ?? process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) throw new Error("FILE_SIGNING_SECRET or JWT_SECRET (at least 32 characters) is required for file links.");
+  return secret;
+}
+const secret = requireSigningSecret();
 
 function filePath(key: string) {
   const resolved = path.resolve(root, key);

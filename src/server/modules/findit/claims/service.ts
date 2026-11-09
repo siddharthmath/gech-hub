@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { Prisma } from "@/src/generated/prisma/client";
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
-import { createClaim, getClaimablePost, getPostForClaims, listClaims } from "@/src/server/modules/findit/claims/repository";
+import { createClaim, deletePendingClaim, findClaimForClaimant, getClaimablePost, getPostForClaims, listClaims } from "@/src/server/modules/findit/claims/repository";
 import { claimObject } from "@/src/server/modules/findit/claims/serializer";
 import { parseClaimListQuery, parseCreateClaim } from "@/src/server/modules/findit/claims/schemas";
 
@@ -33,4 +33,21 @@ export async function getPostClaims(id: string, query: URLSearchParams, user: { 
   const rows = await listClaims({ postId, ...(user.role === "office_staff" ? {} : { claimantId: user.emailId }), ...options });
   const page = getPage(rows, options.limit);
   return { items: page.items.map(claimObject), count: page.count, next_cursor: page.next_cursor };
+}
+
+export async function getMyClaims(query: URLSearchParams, user: { emailId: string }) {
+  const options = parseClaimListQuery(query);
+  const rows = await listClaims({ claimantId: user.emailId, ...options });
+  const page = getPage(rows, options.limit);
+  return { items: page.items.map(claimObject), count: page.count, next_cursor: page.next_cursor };
+}
+
+export async function withdrawClaim(id: string, user: { emailId: string }) {
+  if (!/^CLM-[A-F0-9]{8}$/.test(id)) throw new ApiError(422, "VALIDATION_ERROR", "Expected a CLM id.", [{ field: "id", message: "Expected a CLM id." }]);
+  const deleted = await deletePendingClaim(id, user.emailId);
+  if (deleted.count === 1) return { deleted: true, id };
+
+  const claim = await findClaimForClaimant(id, user.emailId);
+  if (!claim) throw new ApiError(404, "NOT_FOUND", "Claim not found.");
+  throw new ApiError(409, "CLAIM_LOCKED", "Only pending claims can be withdrawn.");
 }

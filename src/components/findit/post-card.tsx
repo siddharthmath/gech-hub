@@ -9,9 +9,9 @@ export function PostCard({ post }: { post: FoundPost }) {
 
   return (
     <Link
-      href={`/findit/${encodeURIComponent(post.post_id)}`}
+      href={`/findit/${encodeURIComponent(post.id)}`}
       className="group block overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      aria-label={`View ${post.title}, found at ${post.location_found}`}
+      aria-label={`View ${post.title}, found at ${post.location_found ?? "unknown location"}`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {image ? (
@@ -36,11 +36,11 @@ export function PostCard({ post }: { post: FoundPost }) {
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
           <Badge variant="outline" className="inline-flex max-w-full min-w-0 items-center gap-1.5 font-normal">
             <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
-            <span className="truncate">{post.location_found}</span>
+            <span className="truncate">{post.location_found ?? "Unknown location"}</span>
           </Badge>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays aria-hidden="true" className="size-4 shrink-0" />
-            <time dateTime={post.found_on}>{post.found_on}</time>
+            <time dateTime={post.found_on ?? undefined}>{post.found_on ?? "Date unknown"}</time>
           </span>
         </div>
       </div>

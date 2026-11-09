@@ -12,16 +12,24 @@ export function createClaim(data: { id: string; postId: string; claimantId: stri
   });
 }
 
-export function listClaims(input: { postId: string; claimantId?: string; limit: number; cursor: CursorPosition | null }) {
+export function listClaims(input: { postId?: string; claimantId?: string; limit: number; cursor: CursorPosition | null }) {
   return prisma.claim.findMany({
     where: {
-      postId: input.postId,
+      ...(input.postId ? { postId: input.postId } : {}),
       ...(input.claimantId ? { claimantId: input.claimantId } : {}),
       ...(input.cursor ? { OR: [{ createdAt: { lt: input.cursor.createdAt } }, { createdAt: input.cursor.createdAt, id: { lt: input.cursor.id } }] } : {}),
     },
     include: { post: { select: { title: true } }, claimant: { select: { emailId: true, name: true, role: true, phoneNumber: true } } },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: input.limit + 1,
   });
+}
+
+export function findClaimForClaimant(id: string, claimantId: string) {
+  return prisma.claim.findFirst({ where: { id, claimantId }, select: { id: true, decision: true } });
+}
+
+export function deletePendingClaim(id: string, claimantId: string) {
+  return prisma.claim.deleteMany({ where: { id, claimantId, decision: "pending" } });
 }
 
 export function getPostForClaims(id: string) {

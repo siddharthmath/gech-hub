@@ -111,7 +111,7 @@ export default function FindItFeedPage() {
         ) : (
           <>
             <div className="mt-6 grid grid-cols-12 gap-4">
-              {posts.map((post) => <div key={post.post_id} className="col-span-12 min-w-0 sm:col-span-6 lg:col-span-4 2xl:col-span-3"><PostCard post={post} /></div>)}
+              {posts.map((post) => <div key={post.id} className="col-span-12 min-w-0 sm:col-span-6 lg:col-span-4 2xl:col-span-3"><PostCard post={post} /></div>)}
             </div>
             {postsQuery.hasNextPage && (
               <div className="mt-10 flex justify-center">

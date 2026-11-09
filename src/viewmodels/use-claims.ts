@@ -28,7 +28,7 @@ export function useCreateClaim(postId: string) {
     onSuccess: (claim) => {
       queryClient.setQueryData(["claims", postId], (current: Awaited<ReturnType<typeof listClaimsRequest>> | undefined) => {
         const existing = current ?? { items: [], count: 0, next_cursor: null };
-        if (existing.items.some((item) => item.claim_id === claim.claim_id)) return existing;
+        if (existing.items.some((item) => item.id === claim.id)) return existing;
         return { ...existing, items: [claim, ...existing.items], count: existing.count + 1 };
       });
       void queryClient.invalidateQueries({ queryKey: ["claims", postId] });

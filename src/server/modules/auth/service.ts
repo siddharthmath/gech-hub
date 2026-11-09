@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { signAccessToken } from "@/src/lib/jwt";
 import { assertNotLocked, recordFailure, resetFailures } from "@/src/server/core/rate-limit";
-import { findAdminByEmail, findUserByEmail } from "@/src/server/modules/auth/repository";
+import { findAdminByEmail, findTeamEmailDomain, findUserByEmail } from "@/src/server/modules/auth/repository";
 import { adminProfile } from "@/src/server/modules/auth/serializer";
 import { userProfile } from "@/src/server/modules/users/serializer";
 
@@ -39,7 +39,8 @@ export async function loginUser(emailId: string, otp: string) {
   const admin = await findAdminByEmail(emailId);
   if (admin) throw new ApiError(403, "USE_ADMIN_LOGIN", "Use the admin login.");
 
-  const domain = process.env.TEAM_EMAIL_DOMAIN?.trim().toLowerCase();
+  const configuredDomain = process.env.TEAM_EMAIL_DOMAIN?.trim().toLowerCase();
+  const domain = configuredDomain || (await findTeamEmailDomain())?.emailDomain.trim().toLowerCase();
   if (!domain || emailId.split("@")[1] !== domain) {
     throw new ApiError(400, "UNKNOWN_INSTITUTION", "This email is not from the configured institution.");
   }
