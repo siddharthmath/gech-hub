@@ -10,6 +10,7 @@ process.env.DATABASE_URL = testDatabaseUrl;
 afterEach(async () => {
   const { prisma } = await import("@/src/lib/prisma");
   await prisma.loginAttempt.deleteMany();
+  await prisma.foundPost.deleteMany();
   await prisma.user.deleteMany();
   await prisma.team.deleteMany();
 });

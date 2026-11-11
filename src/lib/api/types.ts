@@ -2,10 +2,9 @@ export type Role = "admin" | "student" | "faculty" | "office_staff";
 
 export interface Profile {
   role: Role;
-  team_id: string;
   name: string;
   email_id: string;
-  phone_number?: string;
+  phone_number: string | null;
   dept?: string;
   designation?: string;
   usn?: string;
@@ -38,15 +37,15 @@ export interface AdminUser {
 }
 
 export interface FoundPost {
-  post_id: string;
+  id: string;
   title: string;
-  description: string;
-  location_found: string;
-  found_on: string;
-  images: { image_id: string; url: string; content_type: string }[];
+  description: string | null;
+  location_found: string | null;
+  found_on: string | null;
+  images: { url: string }[];
   status: "active" | "archived";
   resolved: boolean;
-  created_by: string;
+  posted_by: { email_id: string; name: string; dept: string | null };
   created_at: string;
   updated_at: string;
   resolution?: {
@@ -59,17 +58,13 @@ export interface FoundPost {
 }
 
 export interface Claim {
-  claim_id: string;
+  id: string;
   post_id: string;
-  claimant_email: string;
-  claimant_name: string;
-  claimant_role: Role;
-  claimant_phone_number?: string;
+  post_title: string;
   message: string;
-  status: "active" | "archived";
   decision: "pending" | "approved" | "rejected";
+  claimant: { email_id: string; name: string; role: Role; phone_number: string | null };
   created_at: string;
-  updated_at: string;
 }
 
 export interface LostRequest {

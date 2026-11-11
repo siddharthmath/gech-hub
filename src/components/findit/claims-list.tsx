@@ -62,24 +62,25 @@ export function ClaimsList({ claims, profile, withdrawingClaimId, onWithdraw, re
       ) : (
         <ul className="mt-5 space-y-4">
           {claims.map((claim) => {
-            const locked = lockedClaims.includes(claim.claim_id);
-            const canWithdraw = !isStaff && claim.decision === "pending" && claim.status === "active" && !locked;
+            const locked = lockedClaims.includes(claim.id);
+            const isClaimant = claim.claimant.email_id.toLowerCase() === profile?.email_id.toLowerCase();
+            const canWithdraw = isClaimant && claim.decision === "pending" && !locked;
             return (
-              <li key={claim.claim_id} className="rounded-xl border border-border p-4 sm:p-5">
+              <li key={claim.id} className="rounded-xl border border-border p-4 sm:p-5">
                 <div className="flex items-start gap-3">
-                  <Avatar aria-hidden="true" className="size-10"><AvatarFallback>{initials(claim.claimant_name)}</AvatarFallback></Avatar>
+                  <Avatar aria-hidden="true" className="size-10"><AvatarFallback>{initials(claim.claimant.name)}</AvatarFallback></Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <h3 className="font-semibold">{claim.claimant_name}</h3>
-                        <p className="text-sm capitalize text-muted-foreground">{claim.claimant_role.replaceAll("_", " ")}</p>
+                        <h3 className="font-semibold">{claim.claimant.name}</h3>
+                        <p className="text-sm capitalize text-muted-foreground">{claim.claimant.role.replaceAll("_", " ")}</p>
                       </div>
                       <ClaimStatusBadge decision={claim.decision} />
                     </div>
                     {isStaff && (
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5"><UserRound aria-hidden="true" className="size-3.5" />{claim.claimant_email}</span>
-                        {claim.claimant_phone_number && <a className="inline-flex min-h-8 items-center gap-1.5 underline-offset-4 hover:underline" href={`tel:${claim.claimant_phone_number}`}><Phone aria-hidden="true" className="size-3.5" />{claim.claimant_phone_number}</a>}
+                        <span className="inline-flex items-center gap-1.5"><UserRound aria-hidden="true" className="size-3.5" />{claim.claimant.email_id}</span>
+                        {claim.claimant.phone_number && <a className="inline-flex min-h-8 items-center gap-1.5 underline-offset-4 hover:underline" href={`tel:${claim.claimant.phone_number}`}><Phone aria-hidden="true" className="size-3.5" />{claim.claimant.phone_number}</a>}
                       </div>
                     )}
                   </div>
@@ -87,22 +88,21 @@ export function ClaimsList({ claims, profile, withdrawingClaimId, onWithdraw, re
                 <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground">{claim.message}</p>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span>Submitted <time dateTime={claim.created_at}>{formatDate(claim.created_at)}</time></span>
-                  <span className="capitalize">{claim.status}</span>
                 </div>
                 {canWithdraw && (
-                  <Button type="button" variant="outline" className="mt-4 min-h-11" disabled={withdrawingClaimId === claim.claim_id} onClick={() => void onWithdraw(claim.claim_id).catch((error: unknown) => {
+                  <Button type="button" variant="outline" className="mt-4 min-h-11" disabled={withdrawingClaimId === claim.id} onClick={() => void onWithdraw(claim.id).catch((error: unknown) => {
                     if (error instanceof ApiError && error.code === "CLAIM_LOCKED") {
-                      setLockedClaims((current) => current.includes(claim.claim_id) ? current : [...current, claim.claim_id]);
+                      setLockedClaims((current) => current.includes(claim.id) ? current : [...current, claim.id]);
                     }
                   })}>
-                    {withdrawingClaimId === claim.claim_id ? "Withdrawing…" : "Withdraw"}
+                    {withdrawingClaimId === claim.id ? "Withdrawing…" : "Withdraw"}
                   </Button>
                 )}
                 {canManageResolution && !resolved && claim.decision === "pending" && (
-                  <Button type="button" className="mt-4 min-h-11" onClick={() => { setSelectedClaim(claim.claim_id); setNote(""); setResolutionError(null); }}>Resolve with this claim</Button>
+                  <Button type="button" className="mt-4 min-h-11" onClick={() => { setSelectedClaim(claim.id); setNote(""); setResolutionError(null); }}>Resolve with this claim</Button>
                 )}
-                {canManageResolution && resolved && claim.claim_id === resolutionClaimId && (
-                  <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => { setSelectedClaim(claim.claim_id); setNote(""); setResolutionError(null); }}>Edit resolution</Button>
+                {canManageResolution && resolved && claim.id === resolutionClaimId && (
+                  <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => { setSelectedClaim(claim.id); setNote(""); setResolutionError(null); }}>Edit resolution</Button>
                 )}
                 {locked && <p className="mt-4 text-sm text-muted-foreground" role="status">This claim can no longer be withdrawn because staff have started reviewing it.</p>}
               </li>
@@ -113,7 +113,7 @@ export function ClaimsList({ claims, profile, withdrawingClaimId, onWithdraw, re
       <Dialog open={Boolean(selectedClaim)} onOpenChange={(open) => { if (!open && !savingResolution) setSelectedClaim(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{resolved ? "Change resolution" : "Resolve found item"}</DialogTitle><DialogDescription>{resolved ? "Choose the approved claim and update the optional staff note." : "This claim will be approved and all other claims will be rejected."}</DialogDescription></DialogHeader>
-          {resolved && <div><label htmlFor="resolution-claim" className="mb-1.5 block font-medium">Approved claim</label><select id="resolution-claim" className="min-h-11 w-full rounded-lg border border-input bg-background px-3" value={selectedClaim ?? ""} onChange={(event) => setSelectedClaim(event.target.value)}>{claims.map((claim) => <option key={claim.claim_id} value={claim.claim_id}>{claim.claimant_name} · {claim.claim_id}</option>)}</select></div>}
+          {resolved && <div><label htmlFor="resolution-claim" className="mb-1.5 block font-medium">Approved claim</label><select id="resolution-claim" className="min-h-11 w-full rounded-lg border border-input bg-background px-3" value={selectedClaim ?? ""} onChange={(event) => setSelectedClaim(event.target.value)}>{claims.map((claim) => <option key={claim.id} value={claim.id}>{claim.claimant.name} · {claim.id}</option>)}</select></div>}
           <div><label htmlFor="resolution-note" className="mb-1.5 block font-medium">Note (optional)</label><Textarea id="resolution-note" value={note} maxLength={1000} onChange={(event) => setNote(event.target.value)} /></div>
           {resolutionError && <p className="text-sm text-destructive" role="alert">{resolutionError}</p>}
           <DialogFooter><Button type="button" variant="outline" className="min-h-11" onClick={() => setSelectedClaim(null)} disabled={savingResolution}>Cancel</Button><Button type="button" className="min-h-11" onClick={() => void saveResolution()} disabled={savingResolution || !selectedClaim}>{savingResolution ? "Saving…" : resolved ? "Save resolution" : "Resolve item"}</Button></DialogFooter>

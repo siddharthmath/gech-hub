@@ -20,7 +20,7 @@ export function ItemImageGallery({ images, title }: { images: FoundPost["images"
     <Carousel opts={{ loop: images.length > 1, align: "start" }} aria-label={`${title} photos`}>
       <CarouselContent className="ml-0">
         {images.map((image, index) => (
-          <CarouselItem key={image.image_id} className="pl-0">
+          <CarouselItem key={`${image.url}-${index}`} className="pl-0">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted lg:aspect-[5/4]">
               {/* Signed image URLs are intentionally used only for this transient preview. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}

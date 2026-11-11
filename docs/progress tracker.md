@@ -6,7 +6,12 @@ Keep this file short. Read the phase specs + code for detail.
 
 - **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`
 - **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow)
+- **GECHhub Backend Spec 11 — Create and list users** — Implemented; route tests added; acceptance pending
+- **GECHhub Backend Spec 12 — View and edit a user** — Implemented; route tests added; production build passes; browser verified admin login, user detail GET, profile PATCH, and refreshed values in the edit dialog
 
+- **GECHhub Backend Spec 13 — Remove user, reissue OTP** — Implemented; route tests added; types, lint, and build pass; tests pending DATABASE_URL_TEST
+- **GECHhub Backend Spec 14 — User sign-in** — Implemented; user OTP login and fresh role-scoped profile routes added with route tests; acceptance pending
+- **GECHhub Backend Spec 15 — Post and browse found items** — Implemented; post/image schema and migration, staff create and authenticated list routes, local signed file storage, and route tests added; acceptance pending
 - **Phase 03 — Item detail + claims** — Implemented; manual acceptance pending
 - **Phase 04 — Staff posting + resolution** — Implemented; manual acceptance pending
 - **Phase 05 — Lost requests** — Implemented; manual acceptance pending
@@ -77,3 +82,7 @@ Keep this file short. Read the phase specs + code for detail.
 3. `architecture.md`
 4. Active `docs/specs/phase-NN-*.md`
 5. This tracker
+
+- **GECHhub Backend Spec 16 — View and edit a found item** — Implemented; authenticated detail and staff edit/archive/reopen routes, image replacement/removal, and route tests added; acceptance pending
+- **GECHhub Backend Spec 17 — Claim an item** — Implemented; claim model/migration, authenticated create and role-scoped paginated list routes, and route tests added; acceptance pending
+- **GECHhub Backend Spec 19 — Resolve a post** — Implemented; resolution model/migration, atomic staff resolution and authorized detail routes, and route tests added; types, lint, and build pass; tests pending `DATABASE_URL_TEST`

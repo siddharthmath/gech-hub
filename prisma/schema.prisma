@@ -25,10 +25,83 @@ model User {
   otp         String
   teamId      String   @map("team_id")
   team        Team     @relation(fields: [teamId], references: [id])
+  foundPosts  FoundPost[]
+  claims      Claim[]
+  resolutions Resolution[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([role, createdAt, emailId])
+}
+
+enum PostStatus {
+  active
+  archived
+}
+
+model FoundPost {
+  id            String           @id
+  title         String
+  description   String?
+  locationFound String?          @map("location_found")
+  foundOn       DateTime?         @map("found_on") @db.Date
+  status        PostStatus       @default(active)
+  resolved      Boolean          @default(false)
+  postedBy      String           @map("posted_by")
+  poster        User             @relation(fields: [postedBy], references: [emailId], onDelete: Restrict)
+  images        FoundPostImage[]
+  claims        Claim[]
+  resolution    Resolution?
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  @@index([status, createdAt, id])
+}
+
+enum Decision {
+  pending
+  approved
+  rejected
+}
+
+model Claim {
+  id         String     @id
+  postId     String     @map("post_id")
+  post       FoundPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  claimantId String     @map("claimant_id")
+  claimant   User       @relation(fields: [claimantId], references: [emailId], onDelete: Cascade)
+  message    String
+  decision   Decision   @default(pending)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  resolution Resolution?
+
+  @@unique([postId, claimantId])
+  @@index([postId, createdAt, id])
+  @@index([claimantId, createdAt, id])
+}
+
+model Resolution {
+  postId     String    @id @map("post_id")
+  post       FoundPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  claimId    String    @unique @map("claim_id")
+  claim      Claim     @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  note       String?
+  resolvedBy String    @map("resolved_by")
+  resolver   User      @relation(fields: [resolvedBy], references: [emailId], onDelete: Restrict)
+  resolvedAt DateTime  @default(now()) @map("resolved_at")
+}
+
+model FoundPostImage {
+  id          String    @id @default(cuid())
+  postId      String    @map("post_id")
+  post        FoundPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  storageKey  String    @map("storage_key")
+  contentType String    @map("content_type")
+  sizeBytes   Int       @map("size_bytes")
+  position    Int
+
+  @@index([postId, position])
 }
 
 model Team {
