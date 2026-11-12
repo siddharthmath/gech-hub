@@ -1,7 +1,8 @@
 import { ApiError } from "@/src/lib/errors";
-import { getResolution, resolvePost } from "@/src/server/modules/findit/resolutions/repository";
+import { changeResolution as changeResolutionRecord, getResolution, resolvePost, undoResolution as undoResolutionRecord } from "@/src/server/modules/findit/resolutions/repository";
 import { resolutionObject } from "@/src/server/modules/findit/resolutions/serializer";
-import { parseResolutionInput, parseResolutionPostId } from "@/src/server/modules/findit/resolutions/schemas";
+import { foundPost } from "@/src/server/modules/findit/serializer";
+import { parseResolutionInput, parseResolutionPatch, parseResolutionPostId } from "@/src/server/modules/findit/resolutions/schemas";
 
 export async function createResolution(postIdInput: string, input: unknown, user: { emailId: string }) {
   const postId = parseResolutionPostId(postIdInput);
@@ -22,4 +23,20 @@ export async function readResolution(postIdInput: string, user: { emailId: strin
     throw new ApiError(404, "NOT_FOUND", "Resolution not found.");
   }
   return resolutionObject(resolution);
+}
+
+export async function changeResolution(postIdInput: string, input: unknown) {
+  const postId = parseResolutionPostId(postIdInput);
+  const parsed = parseResolutionPatch(input);
+  const result = await changeResolutionRecord({ ...parsed, postId });
+  if (result.kind === "resolution_missing") throw new ApiError(404, "NOT_FOUND", "Resolution not found.");
+  if (result.kind === "claim_missing") throw new ApiError(404, "NOT_FOUND", "Claim not found for this post.");
+  return resolutionObject(result.resolution);
+}
+
+export async function undoResolution(postIdInput: string) {
+  const postId = parseResolutionPostId(postIdInput);
+  const result = await undoResolutionRecord(postId);
+  if (result.kind === "resolution_missing") throw new ApiError(404, "NOT_FOUND", "Resolution not found.");
+  return foundPost(result.post);
 }

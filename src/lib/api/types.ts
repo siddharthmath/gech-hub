@@ -68,16 +68,13 @@ export interface Claim {
 }
 
 export interface LostRequest {
-  request_id: string;
+  id: string;
   title: string;
-  description?: string;
-  location_lost?: string;
-  lost_on?: string;
+  description: string | null;
+  location_lost: string | null;
+  lost_on: string | null;
   status: "active" | "archived";
-  created_by: string;
-  created_by_name: string;
-  created_by_role: Role;
-  created_by_phone_number?: string;
+  requester: { email_id: string; name: string; role: Role; phone_number: string | null };
   created_at: string;
   updated_at: string;
 }

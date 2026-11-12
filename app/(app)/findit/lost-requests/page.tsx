@@ -78,7 +78,7 @@ export default function LostRequestsPage() {
           <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{status === "active" ? "Reports for lost items will appear here." : "Reports marked as found will appear here."}</p>
         </div> : <>
           <div className="mt-6 grid grid-cols-12 gap-4">
-            {requests.map((request) => <div key={request.request_id} className={`col-span-12 min-w-0 ${requests.length === 1 ? "" : "md:col-span-6 2xl:col-span-4"}`}><LostRequestEntry request={request} profile={profile!} isStaff={isStaff} wide={requests.length === 1} /></div>)}
+            {requests.map((request) => <div key={request.id} className={`col-span-12 min-w-0 ${requests.length === 1 ? "" : "md:col-span-6 2xl:col-span-4"}`}><LostRequestEntry request={request} profile={profile!} isStaff={isStaff} wide={requests.length === 1} /></div>)}
           </div>
           {query.hasNextPage && <div className="mt-10 flex justify-center"><Button type="button" variant="outline" className="min-h-11 min-w-40 gap-2" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>{query.isFetchingNextPage ? "Loading more…" : "Load more"}{!query.isFetchingNextPage && <ArrowRight aria-hidden="true" className="size-4" />}</Button></div>}
         </>}

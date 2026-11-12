@@ -21,7 +21,7 @@ export function LostRequestCard({ request, isOwner, showPhone, busy, wide, onEdi
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{request.title}</h2>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><UserRound aria-hidden="true" className="size-4" />{request.created_by_name} <span className="capitalize">· {request.created_by_role.replace("_", " ")}</span></p>
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><UserRound aria-hidden="true" className="size-4" />{request.requester.name} <span className="capitalize">· {request.requester.role.replace("_", " ")}</span></p>
         </div>
         <LostRequestStatusBadge status={request.status} />
       </div>
@@ -29,7 +29,7 @@ export function LostRequestCard({ request, isOwner, showPhone, busy, wide, onEdi
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
         {request.location_lost && <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden="true" className="size-4" />{request.location_lost}</span>}
         {request.lost_on && <span className="inline-flex items-center gap-1.5"><CalendarDays aria-hidden="true" className="size-4" />{request.lost_on}</span>}
-        {showPhone && request.created_by_phone_number && <a className="inline-flex min-h-11 items-center gap-1.5 underline-offset-4 hover:underline" href={`tel:${request.created_by_phone_number}`}><Phone aria-hidden="true" className="size-4" />{request.created_by_phone_number}</a>}
+        {showPhone && request.requester.phone_number && <a className="inline-flex min-h-11 items-center gap-1.5 underline-offset-4 hover:underline" href={`tel:${request.requester.phone_number}`}><Phone aria-hidden="true" className="size-4" />{request.requester.phone_number}</a>}
       </div>
     </div>
     {isOwner && <div className={`flex flex-wrap gap-2 border-t border-border pt-4 ${wideLayout ? "2xl:justify-end 2xl:border-0 2xl:pt-0" : ""}`}>
