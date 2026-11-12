@@ -17,6 +17,23 @@ export function getFoundPost(id: string) {
   return prisma.foundPost.findUnique({ where: { id }, include: includePost });
 }
 
+export function deleteFoundPost(id: string) {
+  return prisma.$transaction(async (tx) => {
+    const post = await tx.foundPost.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        images: { select: { storageKey: true } },
+        claims: { where: { decision: "pending" }, select: { id: true }, take: 1 },
+      },
+    });
+    if (!post) return { kind: "missing" as const };
+    if (post.claims.length) return { kind: "pending_claims" as const };
+    await tx.foundPost.delete({ where: { id } });
+    return { kind: "deleted" as const, images: post.images };
+  });
+}
+
 export async function updateFoundPost(id: string, input: {
   title?: string; description?: string | null; locationFound?: string | null; foundOn?: Date;
   status?: "active" | "archived"; replaceImages: boolean; images: Array<UploadedImage & { storageKey: string }>;

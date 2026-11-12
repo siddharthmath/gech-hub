@@ -1,6 +1,6 @@
 import { withApi } from "@/src/lib/http";
 import { requireAuth } from "@/src/server/core/auth";
-import { editFoundPost, getFoundPost } from "@/src/server/modules/findit/service";
+import { deleteFoundPost, editFoundPost, getFoundPost } from "@/src/server/modules/findit/service";
 
 export async function GET(request: Request, context: RouteContext<"/api/v1/findit/posts/[id]">) {
   const { id } = await context.params;
@@ -21,5 +21,13 @@ export async function PATCH(request: Request, context: RouteContext<"/api/v1/fin
       return Response.json(await editFoundPost(id, input, form, user));
     }
     return Response.json(await editFoundPost(id, body, null, user));
+  })(request);
+}
+
+export async function DELETE(request: Request, context: RouteContext<"/api/v1/findit/posts/[id]">) {
+  const { id } = await context.params;
+  return withApi(async ({ request: apiRequest }) => {
+    const user = await requireAuth(apiRequest);
+    return Response.json(await deleteFoundPost(id, user));
   })(request);
 }
