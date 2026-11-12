@@ -18,6 +18,14 @@ export const createLostRequestSchema = z.object({
   lost_on: lostOnSchema.optional(),
 }).strict();
 
+export const patchLostRequestSchema = z.object({
+  title: z.string().trim().min(3).max(100).optional(),
+  description: z.string().trim().max(2000).optional(),
+  location_lost: z.string().trim().min(2).max(120).optional(),
+  lost_on: lostOnSchema.optional(),
+  status: z.enum(["active", "archived"]).optional(),
+}).strict().refine((data) => Object.keys(data).length > 0, "At least one field must be provided.");
+
 export function parseLostRequestListQuery(query: URLSearchParams) {
   const status = z.enum(["active", "archived"]).parse(query.get("status") ?? "active");
   const mine = z.enum(["true", "false"]).parse(query.get("mine") ?? "false");

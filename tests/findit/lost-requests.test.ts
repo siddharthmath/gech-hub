@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GET, POST } from "@/app/api/v1/findit/lost-requests/route";
+import { PATCH, DELETE } from "@/app/api/v1/findit/lost-requests/[id]/route";
 import { prisma } from "@/src/lib/prisma";
 import { authHeader, makeAdmin, makeStaff, makeUser } from "@/tests/helpers";
 
@@ -13,6 +14,21 @@ async function postLostRequest(user: Awaited<ReturnType<typeof makeUser>> | null
 
 async function getLostRequests(user: Awaited<ReturnType<typeof makeUser>>, query = "") {
   return GET(new Request(`http://localhost/api/v1/findit/lost-requests${query}`, { headers: await authHeader(user) }));
+}
+
+async function patchLostRequest(user: Awaited<ReturnType<typeof makeUser>> | null, id: string, body: unknown) {
+  return PATCH(new Request(`http://localhost/api/v1/findit/lost-requests/${id}`, {
+    method: "PATCH",
+    headers: { ...(user ? await authHeader(user) : {}), "content-type": "application/json" },
+    body: JSON.stringify(body),
+  }), { params: Promise.resolve({ id }) });
+}
+
+async function deleteLostRequest(user: Awaited<ReturnType<typeof makeUser>> | null, id: string) {
+  return DELETE(new Request(`http://localhost/api/v1/findit/lost-requests/${id}`, {
+    method: "DELETE",
+    headers: user ? await authHeader(user) : {},
+  }), { params: Promise.resolve({ id }) });
 }
 
 async function createReport(requesterId: string, title: string, createdAt: Date, status: "active" | "archived" = "active") {
@@ -141,5 +157,95 @@ describe("FindIt lost requests collection", () => {
     const response = await GET(new Request("http://localhost/api/v1/findit/lost-requests"));
     expect(response.status).toBe(401);
     expect((await response.json()).error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("lets an owner edit fields, archive, and reactivate their report", async () => {
+    const owner = await makeUser();
+    const row = await createReport(owner.emailId, "Original title", new Date("2026-01-03T00:00:00.000Z"));
+    await prisma.lostRequest.update({ where: { id: row.id }, data: { description: "Description", locationLost: "Library", lostOn: new Date("2026-01-02T00:00:00.000Z") } });
+
+    const edit = await patchLostRequest(owner, row.id, { title: "Updated title" });
+    expect(edit.status).toBe(200);
+    expect(await edit.json()).toMatchObject({ title: "Updated title", description: "Description", location_lost: "Library", lost_on: "2026-01-02", status: "active" });
+
+    const archived = await patchLostRequest(owner, row.id, { status: "archived" });
+    expect(archived.status).toBe(200);
+    const archivedList = await (await getLostRequests(owner, "?status=archived")).json();
+    expect(archivedList.items.map((item: { id: string }) => item.id)).toContain(row.id);
+
+    const active = await patchLostRequest(owner, row.id, { status: "active" });
+    expect(active.status).toBe(200);
+    expect((await active.json()).status).toBe("active");
+  });
+
+  it("validates lost request patches", async () => {
+    const owner = await makeUser();
+    const row = await createReport(owner.emailId, "Original title", new Date("2026-01-03T00:00:00.000Z"));
+    for (const body of [{ status: "resolved" }, { lost_on: "2999-01-01" }, { title: "ab" }, {}]) {
+      const response = await patchLostRequest(owner, row.id, body);
+      expect(response.status).toBe(422);
+      expect((await response.json()).error.code).toBe("VALIDATION_ERROR");
+    }
+  });
+
+  it("hides other owners' reports from student and staff edits", async () => {
+    const owner = await makeUser();
+    const other = await makeUser();
+    const staff = await makeStaff();
+    const row = await createReport(owner.emailId, "Owner report", new Date("2026-01-03T00:00:00.000Z"));
+    for (const caller of [other, staff]) {
+      const response = await patchLostRequest(caller, row.id, { title: "Changed title" });
+      expect(response.status).toBe(404);
+      expect((await response.json()).error.code).toBe("NOT_FOUND");
+    }
+    expect((await prisma.lostRequest.findUniqueOrThrow({ where: { id: row.id } })).title).toBe("Owner report");
+  });
+
+  it("enforces patch authentication, role, and id validation", async () => {
+    const owner = await makeUser();
+    const row = await createReport(owner.emailId, "Owner report", new Date("2026-01-03T00:00:00.000Z"));
+    const admin = await patchLostRequest(await makeAdmin(), row.id, { title: "Changed" });
+    expect(admin.status).toBe(403);
+    expect((await admin.json()).error.code).toBe("FORBIDDEN");
+    const anonymous = await patchLostRequest(null, row.id, { title: "Changed" });
+    expect(anonymous.status).toBe(401);
+    expect((await anonymous.json()).error.code).toBe("UNAUTHORIZED");
+    for (const [id, status] of [["LST-FFFFFFFF", 404], ["FND-FFFFFFFF", 422]] as const) {
+      const response = await patchLostRequest(owner, id, { title: "Changed" });
+      expect(response.status).toBe(status);
+    }
+  });
+
+  it("lets only the owner delete a report", async () => {
+    const owner = await makeUser();
+    const other = await makeUser();
+    const staff = await makeStaff();
+    const row = await createReport(owner.emailId, "Owner report", new Date("2026-01-03T00:00:00.000Z"));
+    for (const caller of [other, staff]) {
+      const response = await deleteLostRequest(caller, row.id);
+      expect(response.status).toBe(404);
+      expect((await response.json()).error.code).toBe("NOT_FOUND");
+      expect(await prisma.lostRequest.findUnique({ where: { id: row.id } })).not.toBeNull();
+    }
+    const deleted = await deleteLostRequest(owner, row.id);
+    expect(deleted.status).toBe(200);
+    expect(await deleted.json()).toMatchObject({ deleted: true, id: row.id });
+    expect(await prisma.lostRequest.findUnique({ where: { id: row.id } })).toBeNull();
+    expect((await (await getLostRequests(owner)).json()).items).toHaveLength(0);
+  });
+
+  it("enforces delete authentication, role, and id validation", async () => {
+    const owner = await makeUser();
+    const row = await createReport(owner.emailId, "Owner report", new Date("2026-01-03T00:00:00.000Z"));
+    const admin = await deleteLostRequest(await makeAdmin(), row.id);
+    expect(admin.status).toBe(403);
+    expect((await admin.json()).error.code).toBe("FORBIDDEN");
+    const anonymous = await deleteLostRequest(null, row.id);
+    expect(anonymous.status).toBe(401);
+    expect((await anonymous.json()).error.code).toBe("UNAUTHORIZED");
+    for (const [id, status] of [["LST-FFFFFFFF", 404], ["FND-FFFFFFFF", 422]] as const) {
+      const response = await deleteLostRequest(owner, id);
+      expect(response.status).toBe(status);
+    }
   });
 });

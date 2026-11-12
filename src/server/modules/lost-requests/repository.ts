@@ -47,3 +47,21 @@ export function listLostRequests(input: {
     take: input.limit + 1,
   });
 }
+
+export function updateOwnedLostRequest(id: string, requesterId: string, data: {
+  title?: string;
+  description?: string;
+  locationLost?: string;
+  lostOn?: Date;
+  status?: "active" | "archived";
+}) {
+  return prisma.$transaction(async (tx) => {
+    const result = await tx.lostRequest.updateMany({ where: { id, requesterId }, data });
+    if (result.count === 0) return null;
+    return tx.lostRequest.findUnique({ where: { id }, include: { requester: { select: requesterSelect } } });
+  });
+}
+
+export function deleteOwnedLostRequest(id: string, requesterId: string) {
+  return prisma.lostRequest.deleteMany({ where: { id, requesterId } });
+}
