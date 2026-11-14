@@ -14,9 +14,9 @@ export function LostRequestEntry({ request, profile, isStaff, wide = false }: {
   wide?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
-  const update = useUpdateLostRequest(request.request_id);
-  const remove = useDeleteLostRequest(request.request_id);
-  const isOwner = request.created_by.toLowerCase() === profile.email_id.toLowerCase();
+  const update = useUpdateLostRequest(request.id);
+  const remove = useDeleteLostRequest(request.id);
+  const isOwner = request.requester.email_id.toLowerCase() === profile.email_id.toLowerCase();
   const busy = update.isPending || remove.isPending;
 
   async function changeStatus(status: "active" | "archived") {
@@ -51,7 +51,7 @@ export function LostRequestEntry({ request, profile, isStaff, wide = false }: {
       onDelete={() => void deleteRequest()}
     />
     {isOwner && <LostRequestFormDialog
-      key={`${request.request_id}-${String(editOpen)}`}
+      key={`${request.id}-${String(editOpen)}`}
       open={editOpen}
       onOpenChange={setEditOpen}
       request={request}

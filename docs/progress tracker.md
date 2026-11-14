@@ -4,6 +4,8 @@ Keep this file short. Read the phase specs + code for detail.
 
 ## Phase
 
+- **GECHhub Backend Spec 22 — Report and list lost items** — Implemented; migration applied, route tests added, and Browser MCP verified student report submission, listing, response shape, and status filters; tests pending `DATABASE_URL_TEST`
+
 - **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`
 - **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow)
 - **GECHhub Backend Spec 11 — Create and list users** — Implemented; route tests added; acceptance pending
@@ -19,7 +21,7 @@ Keep this file short. Read the phase specs + code for detail.
 - **Phase 07 — Production verification** — Build and unauthenticated production route smoke checks complete; live backend manual acceptance pending
 - **Phase 08 — Admin user management** — Implemented; live admin backend acceptance pending
 - **Phase 09 — Responsive role surfaces** — Implemented; student/faculty/staff live-session checks pending
-- Next: Complete Phase 08 manual acceptance and finish the live release checklist
+- **GECHhub Backend Spec 20 — Change or undo resolution** — Implemented; atomic winner/note updates and resolution undo with route tests added; acceptance pending
 
 ## Stack (quick)
 
@@ -85,4 +87,7 @@ Keep this file short. Read the phase specs + code for detail.
 
 - **GECHhub Backend Spec 16 — View and edit a found item** — Implemented; authenticated detail and staff edit/archive/reopen routes, image replacement/removal, and route tests added; acceptance pending
 - **GECHhub Backend Spec 17 — Claim an item** — Implemented; claim model/migration, authenticated create and role-scoped paginated list routes, and route tests added; acceptance pending
+- **GECHhub Backend Spec 18 — My claims, withdraw** — Implemented (`0db1b67`, 2026-11-09); acceptance pending
 - **GECHhub Backend Spec 19 — Resolve a post** — Implemented; resolution model/migration, atomic staff resolution and authorized detail routes, and route tests added; types, lint, and build pass; tests pending `DATABASE_URL_TEST`
+- **GECHhub Backend Spec 20 — Change or undo resolution** — Implemented; PATCH switches winners or edits notes, DELETE restores active post and pending claims, and route tests cover the resolution lifecycle; acceptance pending
+- **Git history verified with Browser MCP:** GitHub `main` lists `c657ebf6e7aa5e840ca0c361918bd2758aff6d0a` (`spec 19 implemented`, 2026-11-10) followed by `0db1b670aca3e2b26d8cd4d46eeb63eaec3296c6` (`spec 18 implemented`, 2026-11-09); this matches local `main`/`origin/main`.

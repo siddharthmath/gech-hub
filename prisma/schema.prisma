@@ -28,6 +28,7 @@ model User {
   foundPosts  FoundPost[]
   claims      Claim[]
   resolutions Resolution[]
+  lostRequests LostRequest[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -102,6 +103,22 @@ model FoundPostImage {
   position    Int
 
   @@index([postId, position])
+}
+
+model LostRequest {
+  id          String     @id
+  requesterId String     @map("requester_id")
+  requester   User       @relation(fields: [requesterId], references: [emailId], onDelete: Cascade)
+  title       String
+  description String?
+  locationLost String?   @map("location_lost")
+  lostOn      DateTime?  @map("lost_on") @db.Date
+  status      PostStatus @default(active)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@index([status, createdAt, id])
+  @@index([requesterId, status, createdAt, id])
 }
 
 model Team {

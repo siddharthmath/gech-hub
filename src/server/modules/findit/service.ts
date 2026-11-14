@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
 import { readSignedFile, storage } from "@/src/server/core/storage";
-import { createFoundPost, findFoundPostImage, getFoundPost as readFoundPost, listFoundPosts, updateFoundPost } from "@/src/server/modules/findit/repository";
+import { createFoundPost, deleteFoundPost as removeFoundPost, findFoundPostImage, getFoundPost as readFoundPost, listFoundPosts, updateFoundPost } from "@/src/server/modules/findit/repository";
 import { foundPost } from "@/src/server/modules/findit/serializer";
 import { parseCreatePost, parsePostListQuery, parsePostPatch } from "@/src/server/modules/findit/schemas";
 
@@ -51,6 +51,24 @@ export async function getFoundPost(id: string) {
 
 export function assertCanManagePost(user: { role: string }, _post: { id: string }) {
   if (user.role !== "office_staff") throw new ApiError(403, "FORBIDDEN", "You do not have permission to manage this post.");
+}
+
+export async function deleteFoundPost(id: string, user: { role: string }) {
+  if (user.role !== "office_staff") throw new ApiError(403, "FORBIDDEN", "You do not have permission to manage this post.");
+  const postId = parseFoundPostId(id);
+  const result = await removeFoundPost(postId);
+  if (result.kind === "missing") throw new ApiError(404, "NOT_FOUND", "Found post not found.");
+  if (result.kind === "pending_claims") {
+    throw new ApiError(409, "POST_HAS_PENDING_CLAIMS", "A post with pending claims cannot be deleted.");
+  }
+  await Promise.all(result.images.map(async ({ storageKey }) => {
+    try {
+      await storage.remove(storageKey);
+    } catch (error) {
+      console.error("Failed to remove found post file after deletion.", { postId, storageKey, error });
+    }
+  }));
+  return { deleted: true, id: postId };
 }
 
 export async function editFoundPost(id: string, input: unknown, form: FormData | null, user: { role: string }) {
