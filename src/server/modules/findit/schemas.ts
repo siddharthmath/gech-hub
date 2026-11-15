@@ -1,5 +1,6 @@
 import { ApiError } from "@/src/lib/errors";
 import { decodeCursor, parseLimit } from "@/src/lib/pagination";
+import { validateFile } from "@/src/server/core/uploads";
 
 export const MAX_IMAGES = 5;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -46,11 +47,13 @@ async function parseImageEntries(entries: FormDataEntryValue[]): Promise<Uploade
   const images: UploadedImage[] = [];
   for (const entry of entries) {
     if (!(entry instanceof File)) validation("images", "Each image must be a file.");
-    if (entry.size > MAX_IMAGE_BYTES) throw new ApiError(422, "IMAGE_TOO_LARGE", "Each image must be 5MB or smaller.", [{ field: entry.name, message: "Image exceeds 5MB." }]);
-    const bytes = new Uint8Array(await entry.arrayBuffer());
-    const detected = detectType(bytes);
-    if (!allowedTypes.has(entry.type) || detected !== entry.type) throw new ApiError(422, "UNSUPPORTED_IMAGE_TYPE", "Only JPEG, PNG, and WebP images are supported.", [{ field: entry.name, message: "File content does not match a supported image type." }]);
-    images.push({ file: entry, bytes, contentType: detected });
+    try {
+      images.push(await validateFile(entry, { types: [...allowedTypes], maxBytes: MAX_IMAGE_BYTES }));
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "ATTACHMENT_TOO_LARGE") throw new ApiError(422, "IMAGE_TOO_LARGE", "Each image must be 5MB or smaller.", [{ field: entry.name, message: "Image exceeds 5MB." }]);
+      if (error instanceof ApiError && error.code === "UNSUPPORTED_ATTACHMENT_TYPE") throw new ApiError(422, "UNSUPPORTED_IMAGE_TYPE", "Only JPEG, PNG, and WebP images are supported.", [{ field: entry.name, message: "File content does not match a supported image type." }]);
+      throw error;
+    }
   }
   return images;
 }
@@ -72,13 +75,6 @@ export async function parsePostPatch(input: unknown, form: FormData | null) {
   if (Object.keys(body).length === 0 && !imagesSent) validation("body", "At least one editable field is required.");
   if (imagesSent && removeImages) validation("images", "Images cannot be uploaded while remove_images is true.");
   return { ...fields, ...(status !== undefined ? { status: status as "active" | "archived" } : {}), replaceImages: imagesSent, removeImages, images: imagesSent && form ? await parseImageEntries(form.getAll("images")) : [] };
-}
-
-function detectType(bytes: Uint8Array): string | null {
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) return "image/png";
-  if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP") return "image/webp";
-  return null;
 }
 
 export function parsePostListQuery(query: URLSearchParams) {

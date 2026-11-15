@@ -1,5 +1,19 @@
 import { apiCall } from "./client";
-import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest } from "./types";
+import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus } from "./types";
+
+export function listNoticesRequest(status: NoticeStatus, pinned: boolean | null, cursor?: string) {
+  const params = new URLSearchParams({ status });
+  if (pinned !== null) params.set("pinned", String(pinned));
+  if (cursor) params.set("cursor", cursor);
+  return apiCall<Paged<Notice>>("GET", `/api/v1/noticehub/notices?${params}`);
+}
+
+export function createNoticeRequest(input: { title: string; body: string; pinned: boolean; publish_at?: string; attachment?: File }) {
+  const form = new FormData(); form.set("title", input.title); form.set("body", input.body); form.set("pinned", String(input.pinned));
+  if (input.publish_at) form.set("publish_at", input.publish_at);
+  if (input.attachment) form.set("attachment", input.attachment);
+  return apiCall<Notice>("POST", "/api/v1/noticehub/notices", { formData: form });
+}
 
 export type FoundPostStatus = "active" | "archived";
 

@@ -1,0 +1,2 @@
+import type { NoticeStatus } from "@/src/lib/api/types";
+export function NoticeStatusBadge({ status }: { status: NoticeStatus }) { return <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status === "active" ? "bg-emerald-500/10 text-emerald-700" : status === "scheduled" ? "bg-amber-500/10 text-amber-700" : "bg-muted text-muted-foreground"}`}>{status === "active" ? "Active" : status === "scheduled" ? "Scheduled" : "Archived"}</span>; }
