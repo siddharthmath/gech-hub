@@ -79,6 +79,15 @@ export interface LostRequest {
   updated_at: string;
 }
 
+export type NoticeStatus = "active" | "scheduled" | "archived";
+export interface Notice {
+  id: string; title: string; body: string; pinned: boolean; status: NoticeStatus;
+  publish_at: string | null; sort_at: string;
+  attachment: { file_name: string; content_type: string | null; size: number | null; url: string } | null;
+  published_by: { email_id: string; name: string; dept: string | null };
+  created_at: string; updated_at: string;
+}
+
 export interface Paged<T> {
   items: T[];
   count: number;

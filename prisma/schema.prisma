@@ -29,6 +29,7 @@ model User {
   claims      Claim[]
   resolutions Resolution[]
   lostRequests LostRequest[]
+  notices      Notice[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -119,6 +120,32 @@ model LostRequest {
 
   @@index([status, createdAt, id])
   @@index([requesterId, status, createdAt, id])
+}
+
+enum NoticeStatus {
+  active
+  archived
+}
+
+model Notice {
+  id             String       @id
+  title          String
+  body           String
+  pinned         Boolean      @default(false)
+  status         NoticeStatus @default(active)
+  publishAt      DateTime?    @map("publish_at")
+  sortAt         DateTime     @map("sort_at")
+  attachmentKey  String?      @map("attachment_key")
+  attachmentName String?      @map("attachment_name")
+  attachmentType String?      @map("attachment_type")
+  attachmentSize Int?         @map("attachment_size")
+  publishedBy    String       @map("published_by")
+  publisher      User         @relation(fields: [publishedBy], references: [emailId], onDelete: Restrict)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([status, sortAt, id])
+  @@index([publishedBy, status, sortAt, id])
 }
 
 model Team {

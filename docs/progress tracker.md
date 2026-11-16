@@ -4,6 +4,8 @@ Keep this file short. Read the phase specs + code for detail.
 
 ## Phase
 
+- **GECHhub Backend Spec 24 — Publish and browse notices** — Implemented; notice migration, authenticated role-scoped publishing/listing, attachment validation and signed URLs, responsive feed/composer, API tests added; types, lint and production build pass; tests pending `DATABASE_URL_TEST`.
+
 - **GECHhub Backend Spec 22 — Report and list lost items** — Implemented; migration applied, route tests added, and Browser MCP verified student report submission, listing, response shape, and status filters; tests pending `DATABASE_URL_TEST`
 
 - **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`

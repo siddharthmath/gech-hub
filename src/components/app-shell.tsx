@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Search, ClipboardList, ClipboardCheck, UserRound, ChevronDown } from "lucide-react";
+import { LogOut, Search, ClipboardList, ClipboardCheck, UserRound, ChevronDown, Megaphone } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -16,6 +16,7 @@ const links = [
   { href: "/findit", label: "Found items", icon: Search },
   { href: "/findit/lost-requests", label: "Lost reports", icon: ClipboardList },
   { href: "/claims", label: "My claims", icon: ClipboardCheck },
+  { href: "/noticehub", label: "Notices", icon: Megaphone },
 ];
 
 function roleName(role: string) {
