@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
-import { readStoredFile, storage } from "@/src/server/core/storage";
+import { readSignedFile, readStoredFile, storage } from "@/src/server/core/storage";
 import { createNotice, findNotice, listNotices } from "@/src/server/modules/notices/repository";
 import { notice } from "@/src/server/modules/notices/serializer";
 import { parseCreateNotice, parseNoticeListQuery } from "@/src/server/modules/notices/schemas";
@@ -53,4 +53,12 @@ export async function downloadNoticeAttachment(id: string, user: { emailId: stri
   const { item } = await visibleNotice(id, user);
   if (!item.attachmentKey || !item.attachmentName || !item.attachmentType) throw new ApiError(404, "NOT_FOUND", "Notice attachment not found.");
   return { bytes: await readStoredFile(item.attachmentKey), contentType: item.attachmentType, fileName: item.attachmentName };
+}
+
+export async function getNoticeAttachment(key: string, expires: string | null, signature: string | null) {
+  const match = /^notices\/(NTC-[A-F0-9]{8})\/[a-f0-9]{16}$/.exec(key);
+  if (!match) throw new ApiError(404, "NOT_FOUND", "File not found.");
+  const item = await findNotice(match[1]);
+  if (!item || item.attachmentKey !== key || !item.attachmentType) throw new ApiError(404, "NOT_FOUND", "File not found.");
+  return { bytes: await readSignedFile(key, expires, signature), contentType: item.attachmentType };
 }

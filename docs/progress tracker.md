@@ -4,16 +4,17 @@ Keep this file short. Read the phase specs + code for detail.
 
 ## Phase
 
-- **GECHhub Backend Spec 24 — Publish and browse notices** — Implemented; notice migration, authenticated role-scoped publishing/listing, attachment validation and signed URLs, responsive feed/composer, API tests added; types, lint and production build pass; tests pending `DATABASE_URL_TEST`.
+- **Production deploy repair** — Fixed signed notice attachment handler export and Next.js prerender boundaries; local `pnpm build` passes. Render deploy pending.
+- **GECHhub Backend Spec 24 — Publish and browse notices** — Implemented; notice migration, authenticated role-scoped publishing/listing, attachment validation and signed URLs, responsive feed/composer, API tests added; types, lint and production build pass; tests pending `DATABASE_URL`.
 
-- **GECHhub Backend Spec 22 — Report and list lost items** — Implemented; migration applied, route tests added, and Browser MCP verified student report submission, listing, response shape, and status filters; tests pending `DATABASE_URL_TEST`
+- **GECHhub Backend Spec 22 — Report and list lost items** — Implemented; migration applied, route tests added, and Browser MCP verified student report submission, listing, response shape, and status filters; tests pending `DATABASE_URL`
 
-- **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated `DATABASE_URL_TEST`
+- **GECHhub Backend Spec 00 — Project readiness** — Implemented; tests require a dedicated development/test database configured as `DATABASE_URL`
 - **GECHhub Backend Spec 10 — Admin sign-in** — Implemented and browser-verified; types, lint, and build pass; database-backed route tests not run (no local database in this workflow)
 - **GECHhub Backend Spec 11 — Create and list users** — Implemented; route tests added; acceptance pending
 - **GECHhub Backend Spec 12 — View and edit a user** — Implemented; route tests added; production build passes; browser verified admin login, user detail GET, profile PATCH, and refreshed values in the edit dialog
 
-- **GECHhub Backend Spec 13 — Remove user, reissue OTP** — Implemented; route tests added; types, lint, and build pass; tests pending DATABASE_URL_TEST
+- **GECHhub Backend Spec 13 — Remove user, reissue OTP** — Implemented; route tests added; types, lint, and build pass; tests pending `DATABASE_URL`
 - **GECHhub Backend Spec 14 — User sign-in** — Implemented; user OTP login and fresh role-scoped profile routes added with route tests; acceptance pending
 - **GECHhub Backend Spec 15 — Post and browse found items** — Implemented; post/image schema and migration, staff create and authenticated list routes, local signed file storage, and route tests added; acceptance pending
 - **Phase 03 — Item detail + claims** — Implemented; manual acceptance pending
@@ -90,7 +91,7 @@ Keep this file short. Read the phase specs + code for detail.
 - **GECHhub Backend Spec 16 — View and edit a found item** — Implemented; authenticated detail and staff edit/archive/reopen routes, image replacement/removal, and route tests added; acceptance pending
 - **GECHhub Backend Spec 17 — Claim an item** — Implemented; claim model/migration, authenticated create and role-scoped paginated list routes, and route tests added; acceptance pending
 - **GECHhub Backend Spec 18 — My claims, withdraw** — Implemented (`0db1b67`, 2026-11-09); acceptance pending
-- **GECHhub Backend Spec 19 — Resolve a post** — Implemented; resolution model/migration, atomic staff resolution and authorized detail routes, and route tests added; types, lint, and build pass; tests pending `DATABASE_URL_TEST`
+- **GECHhub Backend Spec 19 — Resolve a post** — Implemented; resolution model/migration, atomic staff resolution and authorized detail routes, and route tests added; types, lint, and build pass; tests pending `DATABASE_URL`
 - **GECHhub Backend Spec 20 — Change or undo resolution** — Implemented; PATCH switches winners or edits notes, DELETE restores active post and pending claims, and route tests cover the resolution lifecycle; acceptance pending
 - **Git history verified with Browser MCP:** GitHub `main` lists `c657ebf6e7aa5e840ca0c361918bd2758aff6d0a` (`spec 19 implemented`, 2026-11-10) followed by `0db1b670aca3e2b26d8cd4d46eeb63eaec3296c6` (`spec 18 implemented`, 2026-11-09); this matches local `main`/`origin/main`.
 

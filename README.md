@@ -70,10 +70,10 @@ The existing UI remains intact. The server foundation adds Prisma ORM 7,
 PostgreSQL migrations, `GET /api/health`, shared API error handling, JWT and
 OTP helpers, IDs, pagination helpers, and Vitest coverage for the contract.
 
-Keep your existing `DATABASE_URL` in `.env` and add `JWT_SECRET`. Set
-`DATABASE_URL_TEST` to a different, dedicated PostgreSQL test database before
-running `pnpm test`; test setup resets that database at the beginning of each
-run and clears test data between files.
+Set `DATABASE_URL` and `JWT_SECRET` in `.env`. Use a dedicated development/test
+database for local work; `pnpm test` resets the database named by `DATABASE_URL`
+at the beginning of each run and clears test data between files. Production uses
+the same variable name with your production database URL.
 
 ```bash
 pnpm install

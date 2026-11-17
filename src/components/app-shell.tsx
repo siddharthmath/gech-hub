@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Suspense } from "react";
 import { LogOut, Search, ClipboardList, ClipboardCheck, UserRound, ChevronDown, Megaphone } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,9 @@ function roleName(role: string) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   return <SidebarProvider defaultOpen={false}>
-    <AppShellContent>{children}</AppShellContent>
+    <Suspense fallback={<div className="min-h-screen w-full min-w-0 flex-1 bg-background">{children}</div>}>
+      <AppShellContent>{children}</AppShellContent>
+    </Suspense>
   </SidebarProvider>;
 }
 

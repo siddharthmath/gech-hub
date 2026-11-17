@@ -13,7 +13,8 @@ endpoints. The only endpoint here is `GET /api/health`.
 - Layers: **route → service → repository**. Routes only parse the request and
   return the response. Services hold rules. Repositories are the only code that
   imports Prisma.
-- PostgreSQL via `DATABASE_URL`. Tests use a separate `DATABASE_URL_TEST`.
+- PostgreSQL via `DATABASE_URL`. Local tests use a dedicated development/test
+  database configured with that same variable.
 - Contract (envelopes, codes, ids, dates, bodies): `docs/specs/README.md`.
 
 ## Layout
@@ -40,7 +41,7 @@ endpoints. The only endpoint here is `GET /api/health`.
 
 ## Environment
 
-`DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_SECRET` (≥ 32 chars), `TEAM_ID`,
+`DATABASE_URL`, `JWT_SECRET` (≥ 32 chars), `TEAM_ID`,
 `TEAM_EMAIL_DOMAIN` (e.g. `team1.com`), `ADMIN_EMAIL_ID`, `ADMIN_OTP`,
 `ADMIN_NAME` (optional). Add them to `.env.example` with no real values.
 

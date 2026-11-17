@@ -51,7 +51,8 @@ FindIt. Stop at 20 if you want only that range.
 
 ## Test conventions (every spec)
 
-- Vitest; call route handlers with `new Request(...)` on `DATABASE_URL_TEST`;
+- Vitest; call route handlers with `new Request(...)` on the database configured
+  by `DATABASE_URL` (use a dedicated development/test database locally);
   truncate tables before each test.
 - Shared helpers in `tests/factories.ts` (`makeAdmin`, `makeUser`, `makeStaff`,
   `makePost`, `makeClaim`, `tokenFor`); extend, never duplicate.
@@ -74,7 +75,7 @@ Each lives in one module, so a fix is local. Check against `{baseUrl}/docs`.
 
 ## Environment (set up in spec 00)
 
-`DATABASE_URL`, `DATABASE_URL_TEST`, `JWT_SECRET` (≥ 32 chars), `TEAM_ID`,
+`DATABASE_URL`, `JWT_SECRET` (≥ 32 chars), `TEAM_ID`,
 `TEAM_EMAIL_DOMAIN` (e.g. `team1.com`), `ADMIN_EMAIL_ID`, `ADMIN_OTP`,
 `ADMIN_NAME` (optional). `.env.example` lists names only, never real values.
 Packages to approve first: `prisma`, `@prisma/client`, `zod`, `vitest`, and

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Megaphone } from "lucide-react";
 import { useNotices } from "@/src/viewmodels/use-notices";
@@ -11,6 +12,12 @@ import { PinnedStrip } from "@/src/components/notices/pinned-strip";
 import { ComposerDialog } from "@/src/components/notices/composer-dialog";
 
 export default function NoticehubPage() {
+  return <Suspense fallback={<main className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 sm:px-6 sm:py-12" aria-label="Loading notices" />}>
+    <NoticehubContent />
+  </Suspense>;
+}
+
+function NoticehubContent() {
   const searchParams = useSearchParams(); const router = useRouter();
   const initialStatus = searchParams.get("status");
   const [status, setStatusState] = useState<NoticeStatus>(initialStatus === "scheduled" || initialStatus === "archived" ? initialStatus : "active"); const [compose, setCompose] = useState(false);

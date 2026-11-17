@@ -122,8 +122,8 @@ failed.
 **Token expiry.** 12 hours is long enough to forget; every 401 `TOKEN_EXPIRED`
 clears the matching session and returns to the right login page.
 
-**Test database.** Tests truncate tables. They must only ever run against
-`DATABASE_URL_TEST`.
+**Test database.** Tests truncate tables. Locally, point `DATABASE_URL` at a
+dedicated development/test database; never run tests against production.
 
 **Guessing the contract.** Where the guide is silent (field limits, some
 response shapes), the specs record the choice in one place. Verify against the

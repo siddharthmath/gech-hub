@@ -75,7 +75,8 @@ are UX, not security.
 - User text renders as text; never `dangerouslySetInnerHTML`.
 - OTPs are credentials: never logged, never in URLs, returned only by admin
   endpoints.
-- Tests: Vitest on `DATABASE_URL_TEST` only; call handlers with `new Request()`;
+- Tests: Vitest on the database configured by `DATABASE_URL`; use a dedicated
+  development/test database locally. Call handlers with `new Request()`;
   assert status + `error.code`. Cover happy path, auth, role, validation and
   every code the spec lists.
 - Status colors: active green, resolved blue, archived gray, pending amber,
@@ -91,6 +92,6 @@ Breaking one is worse than not finishing.
 - **Never expose fields the role can't see.** Hide, don't disable.
 - **Don't install a package without asking.** Name it, say why, wait.
 - **Don't weaken a check.** A check that can't run must fail loudly (missing
-  `DATABASE_URL_TEST` fails the run). Never test against a non-test database.
+  `DATABASE_URL` fails the run). Never test against a production database.
 - **Don't leave the build broken.** Report failures instead of working around them.
 - **Don't hard-code data.** Lists come from the database.
