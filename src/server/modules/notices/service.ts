@@ -2,9 +2,9 @@ import { randomBytes } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
 import { readSignedFile, readStoredFile, storage } from "@/src/server/core/storage";
-import { createNotice, findNotice, listNotices } from "@/src/server/modules/notices/repository";
+import { createNotice, deleteNotice, findNotice, listNotices, updateNotice } from "@/src/server/modules/notices/repository";
 import { notice } from "@/src/server/modules/notices/serializer";
-import { parseCreateNotice, parseNoticeListQuery } from "@/src/server/modules/notices/schemas";
+import { parseCreateNotice, parseNoticeListQuery, parseUpdateNotice } from "@/src/server/modules/notices/schemas";
 
 export async function publishNotice(form: FormData, publisher: { emailId: string; role: string }) {
   if (!["admin", "faculty", "office_staff"].includes(publisher.role)) throw new ApiError(403, "FORBIDDEN", "Students cannot publish notices.");
@@ -61,4 +61,36 @@ export async function getNoticeAttachment(key: string, expires: string | null, s
   const item = await findNotice(match[1]);
   if (!item || item.attachmentKey !== key || !item.attachmentType) throw new ApiError(404, "NOT_FOUND", "File not found.");
   return { bytes: await readSignedFile(key, expires, signature), contentType: item.attachmentType };
+}
+
+export async function editNotice(id: string, request: Request, parsedBody: unknown, user: { emailId: string; role: string }) {
+  if (user.role === "student") throw new ApiError(403, "FORBIDDEN", "Students cannot edit notices.");
+  validateNoticeId(id);
+  const current = await findNotice(id);
+  if (!current || current.publishedBy !== user.emailId) throw new ApiError(404, "NOT_FOUND", "Notice not found.");
+  const data = await parseUpdateNotice(request, parsedBody);
+  const now = new Date();
+  if (data.publishAt !== undefined && current.status === "active" && !(current.publishAt && current.publishAt > now)) throw new ApiError(409, "NOTICE_ALREADY_PUBLISHED", "This notice has already been published.");
+  const key = data.attachment ? `notices/${id}/${randomBytes(8).toString("hex")}` : null;
+  if (data.attachment && key) await storage.put(key, data.attachment.bytes, data.attachment.contentType);
+  const oldKey = current.attachmentKey;
+  const attachment = key && data.attachment ? { key, name: data.attachment.file.name, type: data.attachment.contentType, size: data.attachment.file.size } : data.removeAttachment ? null : undefined;
+  try {
+    const saved = await updateNotice(id, { ...(data.title === undefined ? {} : { title: data.title }), ...(data.body === undefined ? {} : { body: data.body }), ...(data.pinned === undefined ? {} : { pinned: data.pinned }), ...(data.status === undefined ? {} : { status: data.status }), ...(data.publishAt === undefined ? {} : { publishAt: data.publishAt, sortAt: data.publishAt ?? now }), ...(attachment === undefined ? {} : { attachment }) });
+    if ((key || data.removeAttachment) && oldKey) await storage.remove(oldKey).catch((error) => console.error("Notice attachment cleanup failed", error));
+    return await notice(saved, now);
+  } catch (error) {
+    if (key) await storage.remove(key).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function removeNotice(id: string, user: { emailId: string; role: string }) {
+  if (user.role === "student") throw new ApiError(403, "FORBIDDEN", "Students cannot delete notices.");
+  validateNoticeId(id);
+  const current = await findNotice(id);
+  if (!current || user.role !== "admin" && current.publishedBy !== user.emailId) throw new ApiError(404, "NOT_FOUND", "Notice not found.");
+  await deleteNotice(id);
+  if (current.attachmentKey) await storage.remove(current.attachmentKey).catch((error) => console.error("Notice attachment cleanup failed", error));
+  return { deleted: true, id };
 }

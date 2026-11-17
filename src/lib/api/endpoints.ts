@@ -17,6 +17,16 @@ export function createNoticeRequest(input: { title: string; body: string; pinned
 
 export function getNoticeRequest(id: string) { return apiCall<Notice>("GET", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`); }
 export function downloadNoticeRequest(id: string) { return apiBlob(`/api/v1/noticehub/notices/${encodeURIComponent(id)}/attachment`); }
+export type UpdateNoticeInput = { title?: string; body?: string; pinned?: boolean; status?: "active" | "archived"; publish_at?: string | null; attachment?: File; remove_attachment?: boolean };
+export function updateNoticeRequest(id: string, input: UpdateNoticeInput) {
+  const form = new FormData();
+  for (const key of ["title", "body", "pinned", "status", "publish_at", "remove_attachment"] as const) {
+    const value = input[key]; if (value !== undefined) form.set(key, String(value));
+  }
+  if (input.attachment) form.set("attachment", input.attachment);
+  return apiCall<Notice>("PATCH", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`, { formData: form });
+}
+export function deleteNoticeRequest(id: string) { return apiCall<{ deleted: true; id: string }>("DELETE", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`); }
 
 export type FoundPostStatus = "active" | "archived";
 

@@ -26,3 +26,9 @@ export function getNoticeAttachmentType(storageKey: string) {
 export function findNotice(id: string) {
   return prisma.notice.findUnique({ where: { id }, include: withPublisher });
 }
+
+export function updateNotice(id: string, data: { title?: string; body?: string; pinned?: boolean; status?: "active" | "archived"; publishAt?: Date | null; sortAt?: Date; attachment?: { key: string; name: string; type: string; size: number } | null }) {
+  return prisma.notice.update({ where: { id }, data: { ...data, ...(data.attachment === undefined ? {} : data.attachment ? { attachmentKey: data.attachment.key, attachmentName: data.attachment.name, attachmentType: data.attachment.type, attachmentSize: data.attachment.size } : { attachmentKey: null, attachmentName: null, attachmentType: null, attachmentSize: null }) }, include: withPublisher });
+}
+
+export function deleteNotice(id: string) { return prisma.notice.delete({ where: { id }, include: withPublisher }); }
