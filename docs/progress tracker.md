@@ -93,3 +93,5 @@ Keep this file short. Read the phase specs + code for detail.
 - **GECHhub Backend Spec 19 — Resolve a post** — Implemented; resolution model/migration, atomic staff resolution and authorized detail routes, and route tests added; types, lint, and build pass; tests pending `DATABASE_URL_TEST`
 - **GECHhub Backend Spec 20 — Change or undo resolution** — Implemented; PATCH switches winners or edits notes, DELETE restores active post and pending claims, and route tests cover the resolution lifecycle; acceptance pending
 - **Git history verified with Browser MCP:** GitHub `main` lists `c657ebf6e7aa5e840ca0c361918bd2758aff6d0a` (`spec 19 implemented`, 2026-11-10) followed by `0db1b670aca3e2b26d8cd4d46eeb63eaec3296c6` (`spec 18 implemented`, 2026-11-09); this matches local `main`/`origin/main`.
+
+Spec 25: Implemented authenticated notice detail and attachment download with preview, feed tab return, and visibility handling.

@@ -78,6 +78,29 @@ export async function apiCall<T>(
   return payload as T;
 }
 
+export async function apiBlob(path: string, opts: { authScope?: "user" | "admin" } = {}): Promise<Blob> {
+  const authScope = opts.authScope ?? "user";
+  const token = authScope === "admin" ? useAdminSessionStore.getState().token : useSessionStore.getState().token;
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  let response: Response;
+  try { response = await fetch(`${API_BASE_URL}${path}`, { method: "GET", headers }); }
+  catch { throw new ApiError({ code: "NETWORK", message: "Network request failed." }); }
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null);
+    const envelope = isRecord(payload) ? payload : {};
+    const error = isRecord(envelope.error) ? envelope.error : {};
+    const code = stringOr(error.code, "UNKNOWN_ERROR");
+    if (response.status === 401 && (code === "TOKEN_EXPIRED" || code === "UNAUTHORIZED")) {
+      if (authScope === "admin") useAdminSessionStore.getState().logout();
+      else useSessionStore.getState().logout();
+      if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("gechhub:session-expired", { detail: { scope: authScope } }));
+    }
+    throw new ApiError({ code, message: stringOr(error.message, "The request could not be completed."), ...(error.details === undefined ? {} : { details: error.details }), ...(stringOr(envelope.request_id, "") ? { request_id: stringOr(envelope.request_id, "") } : {}) });
+  }
+  return response.blob();
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

@@ -65,6 +65,11 @@ export function withApi(handler: ApiHandler) {
           error: { code: "HTTP_ERROR", message: "The request could not be completed.", details: null },
         }, requestId);
       }
+      if (!response.headers.get("content-type")?.toLowerCase().includes("application/json")) {
+        const headers = new Headers(response.headers);
+        headers.set("x-request-id", requestId);
+        return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+      }
       const payload: unknown = await response.json();
       return Response.json(payload, { status: response.status, headers: { "x-request-id": requestId } });
     } catch (error) {

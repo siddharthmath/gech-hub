@@ -1,7 +1,7 @@
 import { prisma } from "@/src/lib/prisma";
 import type { CursorPosition } from "@/src/lib/pagination";
 
-const withPublisher = { publisher: { select: { emailId: true, name: true, dept: true } } };
+const withPublisher = { publisher: { select: { emailId: true, name: true, dept: true, role: true } } };
 export function createNotice(data: { id: string; title: string; body: string; pinned: boolean; publishAt: Date | null; sortAt: Date; publishedBy: string; attachment: { key: string; name: string; type: string; size: number } | null }) {
   return prisma.notice.create({ data: { id: data.id, title: data.title, body: data.body, pinned: data.pinned, publishAt: data.publishAt, sortAt: data.sortAt, publishedBy: data.publishedBy, ...(data.attachment ? { attachmentKey: data.attachment.key, attachmentName: data.attachment.name, attachmentType: data.attachment.type, attachmentSize: data.attachment.size } : {}) }, include: withPublisher });
 }
@@ -21,4 +21,8 @@ export function listNotices(input: { status: "active" | "scheduled" | "archived"
 
 export function getNoticeAttachmentType(storageKey: string) {
   return prisma.notice.findFirst({ where: { attachmentKey: storageKey }, select: { attachmentType: true } });
+}
+
+export function findNotice(id: string) {
+  return prisma.notice.findUnique({ where: { id }, include: withPublisher });
 }
