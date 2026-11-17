@@ -1,4 +1,4 @@
-import { apiCall } from "./client";
+import { apiBlob, apiCall } from "./client";
 import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus } from "./types";
 
 export function listNoticesRequest(status: NoticeStatus, pinned: boolean | null, cursor?: string) {
@@ -14,6 +14,9 @@ export function createNoticeRequest(input: { title: string; body: string; pinned
   if (input.attachment) form.set("attachment", input.attachment);
   return apiCall<Notice>("POST", "/api/v1/noticehub/notices", { formData: form });
 }
+
+export function getNoticeRequest(id: string) { return apiCall<Notice>("GET", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`); }
+export function downloadNoticeRequest(id: string) { return apiBlob(`/api/v1/noticehub/notices/${encodeURIComponent(id)}/attachment`); }
 
 export type FoundPostStatus = "active" | "archived";
 

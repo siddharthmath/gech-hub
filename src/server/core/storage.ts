@@ -54,3 +54,11 @@ export async function readSignedFile(key: string, expiresRaw: string | null, pro
     throw new ApiError(404, "NOT_FOUND", "File not found.");
   }
 }
+
+export async function readStoredFile(key: string) {
+  try {
+    return await readFile(filePath(key));
+  } catch {
+    throw new ApiError(404, "NOT_FOUND", "File not found.");
+  }
+}

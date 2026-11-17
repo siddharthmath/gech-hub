@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { getPage } from "@/src/lib/pagination";
-import { readSignedFile, storage } from "@/src/server/core/storage";
-import { createNotice, getNoticeAttachmentType, listNotices } from "@/src/server/modules/notices/repository";
+import { readStoredFile, storage } from "@/src/server/core/storage";
+import { createNotice, findNotice, listNotices } from "@/src/server/modules/notices/repository";
 import { notice } from "@/src/server/modules/notices/serializer";
 import { parseCreateNotice, parseNoticeListQuery } from "@/src/server/modules/notices/schemas";
 
@@ -28,9 +28,29 @@ export async function browseNotices(query: URLSearchParams, user: { emailId: str
   return { items: await Promise.all(page.items.map((item) => notice(item, now))), count: page.count, next_cursor: page.next_cursor };
 }
 
-export async function getNoticeAttachment(key: string, expires: string | null, signature: string | null) {
-  const bytes = await readSignedFile(key, expires, signature);
-  const attachment = await getNoticeAttachmentType(key);
-  if (!attachment?.attachmentType) throw new ApiError(404, "NOT_FOUND", "File not found.");
-  return { bytes, contentType: attachment.attachmentType };
+function validateNoticeId(id: string) {
+  if (!id.startsWith("NTC-")) throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field: "id", message: "ID must be an NTC notice ID." }]);
+}
+
+async function visibleNotice(id: string, user: { emailId: string; role: string }) {
+  validateNoticeId(id);
+  const item = await findNotice(id);
+  const now = new Date();
+  if (!item) throw new ApiError(404, "NOT_FOUND", "Notice not found.");
+  const scheduled = item.status === "active" && item.publishAt !== null && item.publishAt > now;
+  if ((scheduled || item.status === "archived") && item.publishedBy !== user.emailId && user.role !== "admin") {
+    throw new ApiError(404, "NOT_FOUND", "Notice not found.");
+  }
+  return { item, now };
+}
+
+export async function readNotice(id: string, user: { emailId: string; role: string }) {
+  const { item, now } = await visibleNotice(id, user);
+  return notice(item, now);
+}
+
+export async function downloadNoticeAttachment(id: string, user: { emailId: string; role: string }) {
+  const { item } = await visibleNotice(id, user);
+  if (!item.attachmentKey || !item.attachmentName || !item.attachmentType) throw new ApiError(404, "NOT_FOUND", "Notice attachment not found.");
+  return { bytes: await readStoredFile(item.attachmentKey), contentType: item.attachmentType, fileName: item.attachmentName };
 }
