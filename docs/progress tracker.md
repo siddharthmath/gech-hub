@@ -4,6 +4,8 @@ Keep this file short. Read the phase specs + code for detail.
 
 ## Phase
 
+- **GECHhub Backend Spec 27 — Ask and list doubts** — Implemented doubts migration, role and notice visibility rules, paginated/filterable API, and notice detail panel; route tests added; verification pending database configuration.
+
 - **Production deploy repair** — Fixed signed notice attachment handler export and Next.js prerender boundaries; local `pnpm build` passes. Render deploy pending.
 - **GECHhub Backend Spec 24 — Publish and browse notices** — Implemented; notice migration, authenticated role-scoped publishing/listing, attachment validation and signed URLs, responsive feed/composer, API tests added; types, lint and production build pass; tests pending `DATABASE_URL`.
 

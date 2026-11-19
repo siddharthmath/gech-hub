@@ -1,5 +1,15 @@
 import { apiBlob, apiCall } from "./client";
-import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus } from "./types";
+import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus, Doubt } from "./types";
+
+export function listDoubtsRequest(noticeId: string, answered: boolean | null, cursor?: string) {
+  const params = new URLSearchParams();
+  if (answered !== null) params.set("answered", String(answered));
+  if (cursor) params.set("cursor", cursor);
+  return apiCall<Paged<Doubt>>("GET", `/api/v1/noticehub/notices/${encodeURIComponent(noticeId)}/doubts?${params}`);
+}
+export function createDoubtRequest(noticeId: string, question: string) {
+  return apiCall<Doubt>("POST", `/api/v1/noticehub/notices/${encodeURIComponent(noticeId)}/doubts`, { body: { question } });
+}
 
 export function listNoticesRequest(status: NoticeStatus, pinned: boolean | null, cursor?: string) {
   const params = new URLSearchParams({ status });

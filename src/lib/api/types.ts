@@ -88,6 +88,15 @@ export interface Notice {
   created_at: string; updated_at: string;
 }
 
+export interface Doubt {
+  id: string;
+  notice_id: string;
+  question: string;
+  asker: { name: string; role: Role };
+  created_at: string;
+  response: null | { message: string; responded_by: { name: string }; responded_at: string };
+}
+
 export interface Paged<T> {
   items: T[];
   count: number;
