@@ -10,6 +10,12 @@ export function listDoubtsRequest(noticeId: string, answered: boolean | null, cu
 export function createDoubtRequest(noticeId: string, question: string) {
   return apiCall<Doubt>("POST", `/api/v1/noticehub/notices/${encodeURIComponent(noticeId)}/doubts`, { body: { question } });
 }
+export function updateDoubtRequest(id: string, question: string) {
+  return apiCall<Doubt>("PATCH", `/api/v1/noticehub/doubts/${encodeURIComponent(id)}`, { body: { question } });
+}
+export function deleteDoubtRequest(id: string) {
+  return apiCall<{ deleted: true; id: string }>("DELETE", `/api/v1/noticehub/doubts/${encodeURIComponent(id)}`);
+}
 
 export function listNoticesRequest(status: NoticeStatus, pinned: boolean | null, cursor?: string) {
   const params = new URLSearchParams({ status });

@@ -8,6 +8,11 @@ export function parseQuestion(body: unknown) {
   return question.trim();
 }
 
+export function parseDoubtId(id: string) {
+  if (!/^DBT-[0-9A-F]{8}$/.test(id)) throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field: "id", message: "ID must be a DBT doubt ID." }]);
+  return id;
+}
+
 export function parseDoubtQuery(query: URLSearchParams) {
   const raw = query.get("answered");
   if (raw !== null && raw !== "true" && raw !== "false") throw new ApiError(422, "VALIDATION_ERROR", "Request validation failed.", [{ field: "answered", message: "Answered must be true or false." }]);
