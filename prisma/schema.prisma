@@ -30,6 +30,8 @@ model User {
   resolutions Resolution[]
   lostRequests LostRequest[]
   notices      Notice[]
+  doubtsAsked  Doubt[] @relation("DoubtAsker")
+  doubtResponses DoubtResponse[] @relation("DoubtResponder")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -141,11 +143,36 @@ model Notice {
   attachmentSize Int?         @map("attachment_size")
   publishedBy    String       @map("published_by")
   publisher      User         @relation(fields: [publishedBy], references: [emailId], onDelete: Restrict)
+  doubts         Doubt[]
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   @@index([status, sortAt, id])
   @@index([publishedBy, status, sortAt, id])
+}
+
+model Doubt {
+  id        String @id
+  noticeId  String @map("notice_id")
+  notice    Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  askerId   String @map("asker_id")
+  asker     User @relation("DoubtAsker", fields: [askerId], references: [emailId], onDelete: Cascade)
+  question  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  response  DoubtResponse?
+  @@index([noticeId, createdAt, id])
+  @@index([askerId, createdAt, id])
+}
+
+model DoubtResponse {
+  doubtId     String @id @map("doubt_id")
+  doubt       Doubt @relation(fields: [doubtId], references: [id], onDelete: Cascade)
+  message     String
+  respondedBy String @map("responded_by")
+  responder   User @relation("DoubtResponder", fields: [respondedBy], references: [emailId], onDelete: Restrict)
+  respondedAt DateTime @default(now()) @map("responded_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 }
 
 model Team {

@@ -1,5 +1,21 @@
 import { apiBlob, apiCall } from "./client";
-import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus } from "./types";
+import type { AdminProfile, AdminUser, Claim, ManagedRole, Paged, Profile, FoundPost, LostRequest, Notice, NoticeStatus, Doubt } from "./types";
+
+export function listDoubtsRequest(noticeId: string, answered: boolean | null, cursor?: string) {
+  const params = new URLSearchParams();
+  if (answered !== null) params.set("answered", String(answered));
+  if (cursor) params.set("cursor", cursor);
+  return apiCall<Paged<Doubt>>("GET", `/api/v1/noticehub/notices/${encodeURIComponent(noticeId)}/doubts?${params}`);
+}
+export function createDoubtRequest(noticeId: string, question: string) {
+  return apiCall<Doubt>("POST", `/api/v1/noticehub/notices/${encodeURIComponent(noticeId)}/doubts`, { body: { question } });
+}
+export function updateDoubtRequest(id: string, question: string) {
+  return apiCall<Doubt>("PATCH", `/api/v1/noticehub/doubts/${encodeURIComponent(id)}`, { body: { question } });
+}
+export function deleteDoubtRequest(id: string) {
+  return apiCall<{ deleted: true; id: string }>("DELETE", `/api/v1/noticehub/doubts/${encodeURIComponent(id)}`);
+}
 
 export function listNoticesRequest(status: NoticeStatus, pinned: boolean | null, cursor?: string) {
   const params = new URLSearchParams({ status });
@@ -17,6 +33,16 @@ export function createNoticeRequest(input: { title: string; body: string; pinned
 
 export function getNoticeRequest(id: string) { return apiCall<Notice>("GET", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`); }
 export function downloadNoticeRequest(id: string) { return apiBlob(`/api/v1/noticehub/notices/${encodeURIComponent(id)}/attachment`); }
+export type UpdateNoticeInput = { title?: string; body?: string; pinned?: boolean; status?: "active" | "archived"; publish_at?: string | null; attachment?: File; remove_attachment?: boolean };
+export function updateNoticeRequest(id: string, input: UpdateNoticeInput) {
+  const form = new FormData();
+  for (const key of ["title", "body", "pinned", "status", "publish_at", "remove_attachment"] as const) {
+    const value = input[key]; if (value !== undefined) form.set(key, String(value));
+  }
+  if (input.attachment) form.set("attachment", input.attachment);
+  return apiCall<Notice>("PATCH", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`, { formData: form });
+}
+export function deleteNoticeRequest(id: string) { return apiCall<{ deleted: true; id: string }>("DELETE", `/api/v1/noticehub/notices/${encodeURIComponent(id)}`); }
 
 export type FoundPostStatus = "active" | "archived";
 
